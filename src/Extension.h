@@ -24,6 +24,9 @@ public:
 
 protected:
 
+	// Run JavaScript code in parallel (non-blocking mode)
+	static void Spawn(v8::Persistent<v8::Script> script);
+
 	// Get V8 JavaScript exception message
 	std::string GetException(const v8::TryCatch &tryCatch) const;
 

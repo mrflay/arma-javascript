@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <thread>
 
 // Smart pointers
 using std::shared_ptr;

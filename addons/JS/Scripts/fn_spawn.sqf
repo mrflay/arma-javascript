@@ -13,6 +13,8 @@
 		Nothing.
 */
 
-// TODO
+call compile ("JavaScript" callExtension ("\" + _this));
+
+// TODO: Return script handle
 
 nil

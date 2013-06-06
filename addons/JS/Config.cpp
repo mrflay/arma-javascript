@@ -37,6 +37,12 @@ class CfgFunctions
 				file = "\JS\Scripts\fn_spawn.sqf";
 				headerType = -1;
 			};
+			class terminate
+			{
+				description = "Terminate (abort) a spawned JavaScript script.";
+				file = "\JS\Scripts\fn_terminate.sqf";
+				headerType = -1;
+			};
 		};
 	};
 };
