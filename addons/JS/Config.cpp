@@ -43,6 +43,12 @@ class CfgFunctions
 				file = "\JS\Scripts\fn_terminate.sqf";
 				headerType = -1;
 			};
+			class version
+			{
+				description = "Get addon and JavaScript engine version information.";
+				file = "\JS\Scripts\fn_version.sqf";
+				headerType = -1;
+			};
 		};
 	};
 };

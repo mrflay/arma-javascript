@@ -96,3 +96,25 @@ std::string SQF::Serialize(const v8::Handle<v8::Value> value) {
 
 	return SQF::Nil;
 }
+
+// Generate JS_fnc_version SQF output
+std::string SQF::Version() {
+
+	// Version information is returned as SQF array
+	std::stringstream ss;
+	std::string sqf("[\"");
+	
+	// Addon version
+	sqf += SQF::Escape(VERSION_STR);
+	sqf += "\",\"";
+	
+	// JavaScript engine name
+	sqf += SQF::Escape(ENGINE);
+	sqf += "\",\"";
+
+	// JavaScript engine version
+	sqf += SQF::Escape(v8::V8::GetVersion());
+	sqf += "\"]";
+
+	return sqf;
+}

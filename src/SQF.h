@@ -18,6 +18,9 @@ namespace SQF {
 	// Serialize V8 JavaScript value to SQF value/statement
 	std::string Serialize(const v8::Handle<v8::Value> value);
 
+	// Generate JS_fnc_version SQF output
+	std::string Version();
+
 	// SQF "Void" data type value
 	static const char* Nil = "nil";
 

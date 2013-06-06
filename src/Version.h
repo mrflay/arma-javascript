@@ -4,6 +4,7 @@
 
 #define TITLE "JavaScript for ARMA"
 #define DESCRIPTION "JavaScript extension for ARMA"
+#define ENGINE "V8"
 #define VERSION_MAJOR 1
 #define VERSION_MINOR 0
 

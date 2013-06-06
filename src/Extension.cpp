@@ -43,6 +43,9 @@ void __stdcall RVExtension(char* output, int outputSize, const char* input) {
 	// Handle output buffer overflow
 	if (sqf.length() > (size_t)max(outputSize - 1, 0)) {
 
+		// TODO: Technically, instead of throwing an exception we can eliminate
+		// this limitation: use an internal buffer and do self SQF calls until
+		// all the available data is returned to the calling SQF script.
 		sqf = SQF::Throw("[OOB]");
 	}
 
@@ -63,7 +66,7 @@ Extension::Extension() {
 	// TODO: Add JavaScript sleep() function to be used with JS_fnc_spawn
 	// TODO: Add JavaScript log() function to log to ARMA RPT file
 	// TODO: Add "global" property as alias for global object
-	// TODO: Detect when ARMA is paused (suspend scripts and use v8::V8::IdleNotification())
+	// TODO: Detect when ARMA is paused (suspend background scripts and use v8::V8::IdleNotification())
 
 	// Create V8 execution context
 	context = v8::Persistent<v8::Context>::New(isolate, v8::Context::New(isolate, NULL, global));
@@ -86,12 +89,12 @@ std::string Extension::Run(const char* input) {
 			// TODO: Not implemented yet
 		}
 		// JS_fnc_version
-		else if (strncmp(input, JS_PROTOCOL_VERSION, JS_PROTOCOL_CMD_LENGTH) == 0) {
-			// TODO: Not implemented yet
+		else if (strcmp(input, JS_PROTOCOL_VERSION) == 0) {
+			return SQF::Version();
 		}
 		// JS_fnc_init 
 		else if (strcmp(input, JS_PROTOCOL_INIT) == 0) {
-			return SQF::Nothing; // Fast path
+			return SQF::Nothing;
 		}
 	}
 
