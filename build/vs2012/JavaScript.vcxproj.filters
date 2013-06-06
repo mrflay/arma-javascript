@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\src\Common.h" />
+    <ClInclude Include="..\..\src\Version.h" />
+    <ClInclude Include="..\..\src\Extension.h" />
+    <ClInclude Include="..\..\src\Singleton.h" />
+    <ClInclude Include="..\..\src\SQF.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\Extension.cpp" />
+    <ClCompile Include="..\..\src\SQF.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="JavaScript.rc" />
+  </ItemGroup>
+</Project>

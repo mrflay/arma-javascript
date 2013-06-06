@@ -1,0 +1,40 @@
+// Copyright (C) 2013 Simas Toleikis
+
+#include <Windows.h>
+#include "../../src/Version.h"
+
+// Version resource
+VS_VERSION_INFO VERSIONINFO
+
+FILEVERSION VERSION_MAJOR,VERSION_MINOR,0,0
+PRODUCTVERSION VERSION_MAJOR,VERSION_MINOR,0,0
+FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+
+#ifdef _DEBUG
+FILEFLAGS VS_FF_DEBUG
+#else
+FILEFLAGS 0
+#endif
+
+FILEOS VOS__WINDOWS32
+FILETYPE VFT_DLL
+{
+	BLOCK "StringFileInfo"
+	{
+		// Language: U.S. English, charset: Multilingual
+		BLOCK "040904E4"
+		{
+			VALUE "LegalCopyright", "© 2013 Simas Toleikis"
+			VALUE "FileDescription", DESCRIPTION
+			VALUE "FileVersion", VERSION_STR
+			VALUE "InternalName", "JavaScript"
+			VALUE "OriginalFilename", "JavaScript.dll"
+			VALUE "ProductName", TITLE
+			VALUE "ProductVersion", VERSION_STR
+		}
+	}
+	BLOCK "VarFileInfo"
+	{
+		VALUE "Translation", 0x409, 1252
+	}
+}
