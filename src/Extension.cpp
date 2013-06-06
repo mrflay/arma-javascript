@@ -1,4 +1,21 @@
-// Copyright (C) 2013 Simas Toleikis
+/*
+	Copyright (C) 2013 Simas Toleikis
+
+	This file is part of "JavaScript for ARMA" project.
+
+	JavaScript for ARMA is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include "Extension.h"
 #include "SQF.h"
@@ -136,12 +153,12 @@ std::string Extension::Run(const char* input) {
 			if (isSpawn) {
 
 				// NOTE: The persistent V8 Script handle will be released by the background thread
-				v8::Persistent<v8::Script> pScript = v8::Persistent<v8::Script>::New(isolate, script);
+				v8::Persistent<v8::Script> backgroundScript = v8::Persistent<v8::Script>::New(isolate, script);
 
 				// TODO: Exception handling
-				std::thread bgThread(Extension::Spawn, pScript);
+				std::thread backgroundThread(Extension::Spawn, backgroundScript);
 
-				bgThread.detach();
+				backgroundThread.detach();
 			}
 			// JS_fnc_exec
 			else {
