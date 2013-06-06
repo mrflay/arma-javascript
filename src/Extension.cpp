@@ -29,9 +29,15 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved) {
 // Handle Real Virtuality callExtension API calls
 void __stdcall RVExtension(char* output, int outputSize, const char* input) {
 
-	// TODO: Handle output buffer overflow
+	std::string sqf = Extension::Get().Run(input);
 
-	strcpy_s(output, outputSize, Extension::Get().Run(input).c_str());
+	// Handle output buffer overflow
+	if (sqf.length() > (outputSize - 1)) {
+
+		sqf = SQF::Throw("[OOB]");
+	}
+
+	strcpy_s(output, outputSize, sqf.c_str());
 }
 
 // Constructor

@@ -36,11 +36,11 @@ std::string SQF::Throw(const char* message) {
 // Generate SQF "throw" statement from STL string
 std::string SQF::Throw(const std::string &message) {
 
-	std::stringstream ss;
+	std::string sqf("throw \"");
+	sqf += SQF::Escape(message);
+	sqf += "\"";
 
-	ss << "throw \"" << SQF::Escape(message) << "\"";
-
-	return ss.str();
+	return sqf;
 }
 
 // Serialize V8 JavaScript value to SQF value/statement
