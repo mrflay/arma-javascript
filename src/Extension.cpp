@@ -7,6 +7,15 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+// All JavaScript extension protocol commands are 3 bytes in length
+#define JS_PROTOCOL_CMD_LENGTH 3
+
+// Extension protocol commands
+#define JS_PROTOCOL_INIT "__I"
+#define JS_PROTOCOL_SPAWN "__S"
+#define JS_PROTOCOL_TERMINATE "__T"
+#define JS_PROTOCOL_VERSION "__V"
+
 // DLL entry point
 BOOL WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved) {
 
@@ -43,7 +52,7 @@ void __stdcall RVExtension(char* output, int outputSize, const char* input) {
 // Constructor
 Extension::Extension() {
 
-	// A single (default) isolated V8 instance is used
+	// Single (default) isolated V8 instance is used
 	v8::Isolate* isolate = v8::Isolate::GetCurrent();
 
 	v8::HandleScope handleScope(isolate);
@@ -54,29 +63,43 @@ Extension::Extension() {
 	// TODO: Add JavaScript sleep() function to be used with JS_fnc_spawn
 	// TODO: Add JavaScript log() function to log to ARMA RPT file
 	// TODO: Add "global" property as alias for global object
+	// TODO: Detect when ARMA is paused (suspend scripts and use v8::V8::IdleNotification())
 
 	// Create V8 execution context
-	v8Context = v8::Persistent<v8::Context>::New(isolate, v8::Context::New(isolate, NULL, global));
+	context = v8::Persistent<v8::Context>::New(isolate, v8::Context::New(isolate, NULL, global));
 }
 
 // Run JavaScript code and return the result as SQF output
 std::string Extension::Run(const char* input) {
 
-	// Fast path for SQF callExtension "" initialization
-	if (input == "") {
-		return SQF::Nil;
+	bool isSpawn = false;
+
+	// Process special protocol commands
+	if (input[0] == '_') {
+
+		// JS_fnc_spawn
+		if (strncmp(input, JS_PROTOCOL_SPAWN, JS_PROTOCOL_CMD_LENGTH) == 0) {
+			isSpawn = true;
+		}
+		// JS_fnc_terminate
+		else if (strncmp(input, JS_PROTOCOL_TERMINATE, JS_PROTOCOL_CMD_LENGTH) == 0) {
+			// TODO: Not implemented yet
+		}
+		// JS_fnc_version
+		else if (strncmp(input, JS_PROTOCOL_VERSION, JS_PROTOCOL_CMD_LENGTH) == 0) {
+			// TODO: Not implemented yet
+		}
+		// JS_fnc_init 
+		else if (strcmp(input, JS_PROTOCOL_INIT) == 0) {
+			return SQF::Nothing; // Fast path
+		}
 	}
 
 	v8::Isolate* isolate = v8::Isolate::GetCurrent();
 	v8::Locker locker(isolate); // Critical section
 	v8::Isolate::Scope isolateScope(isolate);
-	v8::Context::Scope contextScope(v8Context);
+	v8::Context::Scope contextScope(context);
 	v8::HandleScope handleScope(isolate);
-
-	bool isSpawn = false;
-	if (input[0] == '\\') {
-		isSpawn = true;
-	}
 
 	// TODO: Add JS_fnc_terminate support
 
@@ -84,11 +107,11 @@ std::string Extension::Run(const char* input) {
 
 	if (isSpawn) {
 
-		// Strip "\" symbol in front of the source (marker for parallel execution)
+		// Strip protocol command
 		// TODO: Can we do this better performance-wise?
 
 		std::string sourceStr(input);
-		sourceStr.erase(0 , 1);
+		sourceStr.erase(0 , JS_PROTOCOL_CMD_LENGTH);
 
 		source = v8::String::NewFromUtf8(isolate, sourceStr.c_str());
 	}
@@ -144,10 +167,10 @@ void Extension::Spawn(v8::Persistent<v8::Script> script) {
 
 	Extension &extension = Extension::Get();
 
-	v8::Isolate* isolate = extension.v8Context->GetIsolate();
+	v8::Isolate* isolate = extension.context->GetIsolate();
 	v8::Locker locker(isolate); // Critical section
 	v8::Isolate::Scope isolateScope(isolate);
-	v8::Context::Scope contextScope(extension.v8Context);
+	v8::Context::Scope contextScope(extension.context);
 	v8::HandleScope handleScope(isolate);
 
 	// TODO: Catch unhandled JavaScript exceptions and log them to ARMA RPT file
@@ -207,6 +230,6 @@ std::string Extension::GetException(const v8::TryCatch &tryCatch) const {
 Extension::~Extension() {
 
 	// Release V8 execution context handle
-	v8Context.Dispose();
-	v8Context.Clear();
+	context.Dispose();
+	context.Clear();
 }

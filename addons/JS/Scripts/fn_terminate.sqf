@@ -13,6 +13,4 @@
 		Nothing.
 */
 
-// TODO: Not implemented yet.
-
-nil
+call compile ("JavaScript" callExtension ("__T" + _this))

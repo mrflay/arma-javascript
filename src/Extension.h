@@ -33,6 +33,6 @@ protected:
 private:
 
 	// V8 execution context
-	v8::Persistent<v8::Context> v8Context;
+	v8::Persistent<v8::Context> context;
 
 };
