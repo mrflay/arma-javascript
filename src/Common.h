@@ -30,6 +30,7 @@
 #include <cmath>
 #include <memory>
 #include <thread>
+#include <chrono>
 
 // Smart pointers
 using std::shared_ptr;

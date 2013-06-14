@@ -13,4 +13,4 @@
 		Nothing.
 */
 
-call compile ("JavaScript" callExtension ("__S" + _this))
+call compile ("JavaScript" callExtension ("\S" + _this))

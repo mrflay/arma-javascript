@@ -14,6 +14,6 @@
 */
 
 // Load the DLL extension (and initialize JS addon)
-"JavaScript" callExtension "__I";
+"JavaScript" callExtension "\I";
 
 nil

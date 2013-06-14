@@ -19,19 +19,25 @@
 
 #include "Extension.h"
 #include "SQF.h"
+#include "JavaScript.h"
 
 // Windows API
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-// All JavaScript extension protocol commands are 3 bytes in length
-#define JS_PROTOCOL_CMD_LENGTH 3
+// All JavaScript extension protocol commands start with a "\" symbol
+// for input or "/" symbol for output. The protocol command is then
+// followed by a single-byte token with optional extra payload.
+#define JS_PROTOCOL_INPUT '\\'
+#define JS_PROTOCOL_OUTPUT '/'
+#define JS_PROTOCOL_LENGTH 2
 
-// Extension protocol commands
-#define JS_PROTOCOL_INIT "__I"
-#define JS_PROTOCOL_SPAWN "__S"
-#define JS_PROTOCOL_TERMINATE "__T"
-#define JS_PROTOCOL_VERSION "__V"
+// Extension protocol command tokens
+#define JS_PROTOCOL_TOKEN_INIT 'I'
+#define JS_PROTOCOL_TOKEN_SPAWN 'S'
+#define JS_PROTOCOL_TOKEN_TERMINATE 'T'
+#define JS_PROTOCOL_TOKEN_DONE 'D'
+#define JS_PROTOCOL_TOKEN_VERSION 'V'
 
 // DLL entry point
 BOOL WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved) {
@@ -72,13 +78,20 @@ void __stdcall RVExtension(char* output, int outputSize, const char* input) {
 // Constructor
 Extension::Extension() {
 
+	// Main execution thread ID is used for sleep/uiSleep constrain checks
+	mainThreadID = std::this_thread::get_id();
+
 	// Single (default) isolated V8 instance is used
 	v8::Isolate* isolate = v8::Isolate::GetCurrent();
 
 	v8::HandleScope handleScope(isolate);
+	v8::PropertyAttribute builtInPropAttr = (v8::PropertyAttribute)(v8::DontDelete | v8::ReadOnly);
 
 	// Create a template for the global object
 	v8::Handle<v8::ObjectTemplate> global = v8::ObjectTemplate::New();
+
+	// sleep() function
+	global->Set(v8::String::NewSymbol("sleep"), v8::FunctionTemplate::New(JavaScript::Sleep), builtInPropAttr);
 
 	// TODO: Add JavaScript sleep() function to be used with JS_fnc_spawn
 	// TODO: Add JavaScript log() function to log to ARMA RPT file
@@ -95,22 +108,28 @@ std::string Extension::Run(const char* input) {
 	bool isSpawn = false;
 
 	// Process special protocol commands
-	if (input[0] == '_') {
+	if (input[0] == JS_PROTOCOL_INPUT && input[1] != '\0') {
 
 		// JS_fnc_spawn
-		if (strncmp(input, JS_PROTOCOL_SPAWN, JS_PROTOCOL_CMD_LENGTH) == 0) {
+		if (input[1] == JS_PROTOCOL_TOKEN_SPAWN) {
 			isSpawn = true;
 		}
 		// JS_fnc_terminate
-		else if (strncmp(input, JS_PROTOCOL_TERMINATE, JS_PROTOCOL_CMD_LENGTH) == 0) {
+		else if (input[1] == JS_PROTOCOL_TOKEN_TERMINATE) {
+			// TODO: Not implemented yet
+		}
+		// JS_fnc_done
+		else if (input[1] == JS_PROTOCOL_TOKEN_DONE) {
 			// TODO: Not implemented yet
 		}
 		// JS_fnc_version
-		else if (strcmp(input, JS_PROTOCOL_VERSION) == 0) {
+		else if (input[1] == JS_PROTOCOL_TOKEN_VERSION) {
 			return SQF::Version();
 		}
-		// JS_fnc_init 
-		else if (strcmp(input, JS_PROTOCOL_INIT) == 0) {
+		// JS_fnc_init
+		else if (input[1] == JS_PROTOCOL_TOKEN_INIT) {
+			
+			// Initialization is part of Singleton constructor
 			return SQF::Nothing;
 		}
 	}
@@ -121,8 +140,6 @@ std::string Extension::Run(const char* input) {
 	v8::Context::Scope contextScope(context);
 	v8::HandleScope handleScope(isolate);
 
-	// TODO: Add JS_fnc_terminate support
-
 	v8::Handle<v8::String> source;
 
 	if (isSpawn) {
@@ -131,10 +148,11 @@ std::string Extension::Run(const char* input) {
 		// TODO: Can we do this better performance-wise?
 
 		std::string sourceStr(input);
-		sourceStr.erase(0 , JS_PROTOCOL_CMD_LENGTH);
+		sourceStr.erase(0, JS_PROTOCOL_LENGTH);
 
 		source = v8::String::NewFromUtf8(isolate, sourceStr.c_str());
 	}
+	// JS_fnc_exec path
 	else {
 		source = v8::String::NewFromUtf8(isolate, input);
 	}

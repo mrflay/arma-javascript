@@ -19,17 +19,12 @@
 
 #pragma once
 
-#define TITLE "JavaScript for ARMA"
-#define DESCRIPTION "JavaScript extension for ARMA"
-#define ENGINE "V8"
-#define VERSION_MAJOR 0
-#define VERSION_MINOR 6
+#include "Common.h"
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
+// JavaScript bindings
+namespace JavaScript {
 
-#ifdef NDEBUG
-	#define VERSION_STR TOSTRING(VERSION_MAJOR) "." TOSTRING(VERSION_MINOR)
-#else
-	#define VERSION_STR TOSTRING(VERSION_MAJOR) "." TOSTRING(VERSION_MINOR) "-dev"
-#endif
+	// sleep()
+	v8::Handle<v8::Value> Sleep(const v8::Arguments &args);
+
+}

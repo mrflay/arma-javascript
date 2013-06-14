@@ -6,10 +6,12 @@
     <ClInclude Include="..\..\src\Extension.h" />
     <ClInclude Include="..\..\src\Singleton.h" />
     <ClInclude Include="..\..\src\SQF.h" />
+    <ClInclude Include="..\..\src\JavaScript.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Extension.cpp" />
     <ClCompile Include="..\..\src\SQF.cpp" />
+    <ClCompile Include="..\..\src\JavaScript.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="JavaScript.rc" />

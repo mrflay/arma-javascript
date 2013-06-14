@@ -16,4 +16,4 @@
 			select 2: STRING - JavaScript engine version.
 */
 
-call compile ("JavaScript" callExtension "__V")
+call compile ("JavaScript" callExtension "\V")

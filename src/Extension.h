@@ -39,6 +39,9 @@ public:
 	// Run JavaScript code and return the result as SQF output
 	std::string Run(const char* input);
 
+	// Get main extension thread ID
+	inline const std::thread::id& GetMainThreadID() const { return mainThreadID; }
+
 protected:
 
 	// Run JavaScript code in parallel (non-blocking mode)
@@ -51,5 +54,8 @@ private:
 
 	// V8 execution context
 	v8::Persistent<v8::Context> context;
+
+	// Main thread ID
+	std::thread::id mainThreadID;
 
 };

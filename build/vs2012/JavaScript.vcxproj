@@ -97,6 +97,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\JavaScript.h" />
     <ClInclude Include="..\..\src\Common.h" />
     <ClInclude Include="..\..\src\Extension.h" />
     <ClInclude Include="..\..\src\Singleton.h" />
@@ -104,6 +105,7 @@
     <ClInclude Include="..\..\src\Version.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\JavaScript.cpp" />
     <ClCompile Include="..\..\src\Extension.cpp" />
     <ClCompile Include="..\..\src\SQF.cpp" />
   </ItemGroup>
