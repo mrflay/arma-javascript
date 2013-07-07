@@ -27,15 +27,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved) {
 	switch (fdwReason) {
 
 		case DLL_PROCESS_ATTACH:
-		case DLL_THREAD_ATTACH: {
-
-			// Workaround for ARMA buffer overflow issue in Debug build of DLL
-			#ifndef NDEBUG
-				_CrtSetDebugFillThreshold(0); // Disable strcpy_s initial buffer fill with 0xFD
-			#endif
-
-			break;
-		}
+		case DLL_THREAD_ATTACH:
 		case DLL_THREAD_DETACH:
 		case DLL_PROCESS_DETACH: {
 
@@ -51,6 +43,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved) {
 // Handle Real Virtuality callExtension API calls
 void __stdcall RVExtension(char* output, int outputSize, const char* input) {
 
+	// TODO: Use a static pre-allocated std::string buffer for output
 	std::string sqf = Extension::Get().Run(input);
 
 	// Handle output buffer overflow
@@ -62,7 +55,19 @@ void __stdcall RVExtension(char* output, int outputSize, const char* input) {
 		sqf = SQF::Throw("[OOB]");
 	}
 
+	// Workaround for ARMA buffer overflow issue in Debug build of DLL
+	#ifdef _DEBUG
+		// Disable strcpy_s initial buffer fill with 0xFD
+		size_t oldThreshold = _CrtSetDebugFillThreshold(0);
+	#endif
+
+	// Pass back the result to ARMA
 	strcpy_s(output, outputSize, sqf.c_str());
+
+	// Restore initial buffer fill threshold
+	#ifdef _DEBUG
+		_CrtSetDebugFillThreshold(oldThreshold);
+	#endif
 }
 
 // Constructor
