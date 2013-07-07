@@ -19,34 +19,71 @@
 
 #include "JavaScript.h"
 #include "Extension.h"
-
-using namespace JavaScript;
+#include "SQF.h"
 
 // JavaScript sleep() function
-v8::Handle<v8::Value> JavaScript::Sleep(const v8::Arguments &args) {
+void JavaScript::Sleep(const v8::FunctionCallbackInfo<v8::Value>& args) {
+
+	// NOTE: IsExecutionTerminating() doesn't seem to work when TerminateExecution()
+	// is invoked by V8 thread ID. We are using a local TLS flag as a workaround.
+	__declspec(thread) static bool terminateExecution = false;
+
+	if (terminateExecution) {
+		return;
+	}
+
+	v8::Isolate* isolate = args.GetIsolate();
+	Extension &extension = Extension::Get();
 
 	// Cannot use sleep/uiSleep in the main thread (with JS_fnc_exec)
-	if (std::this_thread::get_id() == Extension::Get().GetMainThreadID()) {
-		return v8::ThrowException(v8::String::New("sleep() and uiSleep() can only be used with JS_fnc_spawn"));
+	if (std::this_thread::get_id() == extension.mainThreadID) {
+		
+		v8::HandleScope handleScope(isolate);
+		v8::ThrowException(v8::String::New("sleep() can only be used with a background script (JS_fnc_spawn)"));
+
+		return;
 	}
 
 	// Process sleep
 	if (args.Length() && args[0]->IsNumber()) {
 
-		v8::Isolate* isolate = args.GetIsolate();
+		double sleepForValue = max(args[0]->NumberValue(), 0);
 
-		double sleepForValue = args[0]->NumberValue();
+		{
+			// Let other threads use V8 during sleep
+			isolate->Exit();
+			v8::Unlocker unlocker(isolate);
 
-		// Let other threads use V8 during sleep
-		v8::Unlocker unlocker(isolate);
+			DWORD sleepFor = static_cast<DWORD>(sleepForValue * 1000 + 0.5);
+			__declspec(thread) static HANDLE terminationEvent = NULL;
 
-		if (sleepForValue > 0) {
+			// Cache termination event handle locally
+			if (terminationEvent == NULL) {
 
-			uint_fast32 sleepFor = static_cast<uint_fast32>(sleepForValue * 1000 + 0.5);
-	
-			std::this_thread::sleep_for(std::chrono::milliseconds(sleepFor));
+				std::string scriptHandle = SQF::ScriptHandle(std::this_thread::get_id());
+				auto it = extension.backgroundScripts.find(scriptHandle);
+
+				if (it != extension.backgroundScripts.end()) {
+					terminationEvent = it->second;
+				}
+			}
+
+			if (terminationEvent != NULL) {
+
+				DWORD sleepResult = WaitForSingleObject(terminationEvent, sleepFor);
+
+				// Termination event signal
+				if (sleepResult == WAIT_OBJECT_0) {
+					terminateExecution = true;
+				}
+			}
+		}
+
+		isolate->Enter();
+
+		// Try to terminate V8 thread/script
+		if (terminateExecution) {
+			v8::V8::TerminateExecution(v8::V8::GetCurrentThreadId());
 		}
 	}
-
-	return v8::Undefined();
 }

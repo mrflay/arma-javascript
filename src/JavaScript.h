@@ -22,9 +22,11 @@
 #include "Common.h"
 
 // JavaScript bindings
-namespace JavaScript {
+class JavaScript {
+
+public:
 
 	// sleep()
-	v8::Handle<v8::Value> Sleep(const v8::Arguments &args);
+	static void Sleep(const v8::FunctionCallbackInfo<v8::Value>& args);
 
-}
+};

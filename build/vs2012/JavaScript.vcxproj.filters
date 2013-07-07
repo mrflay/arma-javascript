@@ -7,6 +7,7 @@
     <ClInclude Include="..\..\src\Singleton.h" />
     <ClInclude Include="..\..\src\SQF.h" />
     <ClInclude Include="..\..\src\JavaScript.h" />
+    <ClInclude Include="..\..\addons\JS\API.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Extension.cpp" />

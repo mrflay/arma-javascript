@@ -21,31 +21,21 @@
 #include "SQF.h"
 #include "JavaScript.h"
 
-// Windows API
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
-// All JavaScript extension protocol commands start with a "\" symbol
-// for input or "/" symbol for output. The protocol command is then
-// followed by a single-byte token with optional extra payload.
-#define JS_PROTOCOL_INPUT '\\'
-#define JS_PROTOCOL_OUTPUT '/'
-#define JS_PROTOCOL_LENGTH 2
-
-// Extension protocol command tokens
-#define JS_PROTOCOL_TOKEN_INIT 'I'
-#define JS_PROTOCOL_TOKEN_SPAWN 'S'
-#define JS_PROTOCOL_TOKEN_TERMINATE 'T'
-#define JS_PROTOCOL_TOKEN_DONE 'D'
-#define JS_PROTOCOL_TOKEN_VERSION 'V'
-
 // DLL entry point
 BOOL WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved) {
 
 	switch (fdwReason) {
 
 		case DLL_PROCESS_ATTACH:
-		case DLL_THREAD_ATTACH:
+		case DLL_THREAD_ATTACH: {
+
+			// Workaround for ARMA buffer overflow issue in Debug build of DLL
+			#ifndef NDEBUG
+				_CrtSetDebugFillThreshold(0); // Disable strcpy_s initial buffer fill with 0xFD
+			#endif
+
+			break;
+		}
 		case DLL_THREAD_DETACH:
 		case DLL_PROCESS_DETACH: {
 
@@ -76,13 +66,14 @@ void __stdcall RVExtension(char* output, int outputSize, const char* input) {
 }
 
 // Constructor
-Extension::Extension() {
+Extension::Extension(): isolate(NULL) {
 
 	// Main execution thread ID is used for sleep/uiSleep constrain checks
 	mainThreadID = std::this_thread::get_id();
 
-	// Single (default) isolated V8 instance is used
-	v8::Isolate* isolate = v8::Isolate::GetCurrent();
+	// Single (default) isolated V8 instance is used.
+	// TODO: Consider using separate isolates for each ARMA addon (based on PBO prefix?)
+	isolate = v8::Isolate::GetCurrent();
 
 	v8::HandleScope handleScope(isolate);
 	v8::PropertyAttribute builtInPropAttr = (v8::PropertyAttribute)(v8::DontDelete | v8::ReadOnly);
@@ -93,13 +84,12 @@ Extension::Extension() {
 	// sleep() function
 	global->Set(v8::String::NewSymbol("sleep"), v8::FunctionTemplate::New(JavaScript::Sleep), builtInPropAttr);
 
-	// TODO: Add JavaScript sleep() function to be used with JS_fnc_spawn
-	// TODO: Add JavaScript log() function to log to ARMA RPT file
 	// TODO: Add "global" property as alias for global object
+	// TODO: Add JavaScript log() function to log to ARMA RPT file
 	// TODO: Detect when ARMA is paused (suspend background scripts and use v8::V8::IdleNotification())
 
 	// Create V8 execution context
-	context = v8::Persistent<v8::Context>::New(isolate, v8::Context::New(isolate, NULL, global));
+	context.Reset(isolate, v8::Context::New(isolate, NULL, global));
 }
 
 // Run JavaScript code and return the result as SQF output
@@ -107,8 +97,8 @@ std::string Extension::Run(const char* input) {
 
 	bool isSpawn = false;
 
-	// Process special protocol commands
-	if (input[0] == JS_PROTOCOL_INPUT && input[1] != '\0') {
+	// Fast path to process special protocol commands
+	if (input[0] == JS_PROTOCOL_COMMAND && input[1] != '\0') {
 
 		// JS_fnc_spawn
 		if (input[1] == JS_PROTOCOL_TOKEN_SPAWN) {
@@ -116,11 +106,39 @@ std::string Extension::Run(const char* input) {
 		}
 		// JS_fnc_terminate
 		else if (input[1] == JS_PROTOCOL_TOKEN_TERMINATE) {
-			// TODO: Not implemented yet
+			
+			std::string scriptHandle(input);
+			scriptHandle.erase(0, JS_PROTOCOL_LENGTH);
+
+			// TODO: Need a mutex here
+
+			auto it = backgroundScripts.find(scriptHandle);
+
+			// Bad script handle (or the background script is already finished)
+			if (it == backgroundScripts.end()) {
+				return SQF::False;
+			}
+
+			// Signal script termination event
+			SetEvent(it->second);
+
+			// TODO: Should we block and wait until the background script is terminated?
+
+			return SQF::True;
 		}
 		// JS_fnc_done
 		else if (input[1] == JS_PROTOCOL_TOKEN_DONE) {
-			// TODO: Not implemented yet
+			
+			std::string scriptHandle(input);
+			scriptHandle.erase(0, JS_PROTOCOL_LENGTH);
+
+			auto it = backgroundScripts.find(scriptHandle);
+
+			if (it == backgroundScripts.end()) {
+				return SQF::True;
+			}
+
+			return SQF::False;
 		}
 		// JS_fnc_version
 		else if (input[1] == JS_PROTOCOL_TOKEN_VERSION) {
@@ -134,11 +152,10 @@ std::string Extension::Run(const char* input) {
 		}
 	}
 
-	v8::Isolate* isolate = v8::Isolate::GetCurrent();
 	v8::Locker locker(isolate); // Critical section
 	v8::Isolate::Scope isolateScope(isolate);
-	v8::Context::Scope contextScope(context);
 	v8::HandleScope handleScope(isolate);
+	v8::Context::Scope contextScope(v8::Local<v8::Context>::New(isolate, context));
 
 	v8::Handle<v8::String> source;
 
@@ -173,10 +190,23 @@ std::string Extension::Run(const char* input) {
 				// NOTE: The persistent V8 Script handle will be released by the background thread
 				v8::Persistent<v8::Script> backgroundScript = v8::Persistent<v8::Script>::New(isolate, script);
 
-				// TODO: Exception handling
-				std::thread backgroundThread(Extension::Spawn, backgroundScript);
+				try {
 
-				backgroundThread.detach();
+					// NOTE: We do not need a mutex here because the V8 Locker is active
+
+					std::thread backgroundThread(Extension::Spawn, backgroundScript);
+					std::string scriptHandle = SQF::ScriptHandle(backgroundThread.get_id());
+
+					// Store background thread ID and termination event
+					backgroundScripts[scriptHandle] = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+					backgroundThread.detach();
+
+					return ('"' + scriptHandle + '"');
+				}
+				catch (...) {
+					return SQF::Nil; // System error
+				}
 			}
 			// JS_fnc_exec
 			else {
@@ -205,14 +235,27 @@ void Extension::Spawn(v8::Persistent<v8::Script> script) {
 
 	Extension &extension = Extension::Get();
 
-	v8::Isolate* isolate = extension.context->GetIsolate();
-	v8::Locker locker(isolate); // Critical section
-	v8::Isolate::Scope isolateScope(isolate);
-	v8::Context::Scope contextScope(extension.context);
-	v8::HandleScope handleScope(isolate);
+	v8::Locker locker(extension.isolate); // Critical section
+
+	v8::Isolate::Scope isolateScope(extension.isolate);
+	v8::HandleScope handleScope(extension.isolate);
+	v8::Context::Scope contextScope(v8::Local<v8::Context>::New(extension.isolate, extension.context));
+
+	v8::TryCatch tryCatch;
 
 	// TODO: Catch unhandled JavaScript exceptions and log them to ARMA RPT file
 	script->Run();
+
+	std::string scriptHandle = SQF::ScriptHandle(std::this_thread::get_id());
+
+	auto it = extension.backgroundScripts.find(scriptHandle);
+
+	// Clean up
+	if (it != extension.backgroundScripts.end()) {
+
+		CloseHandle(it->second);
+		extension.backgroundScripts.erase(scriptHandle);
+	}	
 
 	script.Dispose();
 	script.Clear();
@@ -221,7 +264,6 @@ void Extension::Spawn(v8::Persistent<v8::Script> script) {
 // Get V8 JavaScript exception message
 std::string Extension::GetException(const v8::TryCatch &tryCatch) const {
 
-	v8::Isolate* isolate = v8::Isolate::GetCurrent();
 	v8::HandleScope handleScope(isolate);
 
 	v8::String::Utf8Value exception(tryCatch.Exception());

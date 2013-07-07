@@ -22,25 +22,34 @@
 #include "Common.h"
 
 // SQF output and conversion methods
-namespace SQF {
+class SQF {
+
+public:
 
 	// Escape quotation (") characters in SQF output strings
-	std::string Escape(const char* input);
-	std::string Escape(const std::string &input);
+	static std::string Escape(const char* input);
+	static std::string Escape(const std::string &input);
 
 	// Generate SQF "throw" statement
-	std::string Throw(const char* message);
-	std::string Throw(const std::string &message);
+	static std::string Throw(const char* message);
+	static std::string Throw(const std::string &message);
 
 	// Serialize V8 JavaScript value to SQF value/statement
-	std::string Serialize(const v8::Handle<v8::Value> value);
+	static std::string Serialize(const v8::Handle<v8::Value> value);
 
 	// Generate JS_fnc_version SQF output
-	std::string Version();
+	static std::string Version();
+
+	// Generate SQF script handle for a given thread ID
+	static std::string ScriptHandle(const std::thread::id &threadID);
 
 	// SQF "Void" data type value
-	static const char* Nil = "nil";
+	static const char* Nil;
 
 	// SQF "Nothing" data type value
-	static const char* Nothing = "";
-}
+	static const char* Nothing;
+
+	// SQF "Boolean" data type values
+	static const char* True;
+	static const char* False;
+};

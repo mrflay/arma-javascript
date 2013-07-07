@@ -43,6 +43,12 @@ class CfgFunctions
 				file = "\JS\Scripts\fn_terminate.sqf";
 				headerType = -1;
 			};
+			class done
+			{
+				description = "Check if a spawned JavaScript script is done (finished).";
+				file = "\JS\Scripts\fn_done.sqf";
+				headerType = -1;
+			};
 			class version
 			{
 				description = "Get addon and JavaScript engine version information.";

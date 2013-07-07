@@ -13,4 +13,6 @@
 		Nothing.
 */
 
-call compile ("JavaScript" callExtension ("\S" + _this))
+#include "\JS\API.hpp"
+
+call compile ("JavaScript" callExtension (JS_PROTOCOL_COMMAND_SPAWN + _this))

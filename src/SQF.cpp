@@ -19,7 +19,11 @@
 
 #include "SQF.h"
 
-using namespace SQF;
+// SQF data type values
+const char* SQF::Nil = "nil";
+const char* SQF::Nothing = "";
+const char* SQF::True = "true";
+const char* SQF::False = "false";
 
 // Escape quotation (") characters in SQF output strings (for C string)
 std::string SQF::Escape(const char* input) {
@@ -134,4 +138,16 @@ std::string SQF::Version() {
 	sqf += "\"]";
 
 	return sqf;
+}
+
+// Generate SQF script handle for a given thread ID
+std::string SQF::ScriptHandle(const std::thread::id &threadID) {
+
+	std::stringstream ss;
+
+	// SQF representation of the spawned script handle
+	ss << JS_PROTOCOL_COMMAND << JS_PROTOCOL_TOKEN_SPAWN;
+	ss << threadID;
+
+	return ss.str();
 }

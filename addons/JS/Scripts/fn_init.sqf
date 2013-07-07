@@ -13,7 +13,9 @@
 		Nothing.
 */
 
+#include "\JS\API.hpp"
+
 // Load the DLL extension (and initialize JS addon)
-"JavaScript" callExtension "\I";
+"JavaScript" callExtension JS_PROTOCOL_COMMAND_INIT;
 
 nil

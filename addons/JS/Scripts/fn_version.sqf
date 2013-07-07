@@ -16,4 +16,6 @@
 			select 2: STRING - JavaScript engine version.
 */
 
-call compile ("JavaScript" callExtension "\V")
+#include "\JS\API.hpp"
+
+call compile ("JavaScript" callExtension JS_PROTOCOL_COMMAND_VERSION)

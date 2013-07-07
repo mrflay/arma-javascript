@@ -20,17 +20,11 @@
 #pragma once
 
 // STL and C++ runtime headers
-#include <iostream>
 #include <sstream>
-#include <map>
-#include <vector>
-#include <set>
-#include <stack>
-#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <thread>
-#include <chrono>
+#include <unordered_map>
 
 // Smart pointers
 using std::shared_ptr;
@@ -60,8 +54,17 @@ typedef uint_fast16_t uint_fast16;
 typedef int_fast32_t int_fast32;
 typedef uint_fast32_t uint_fast32;
 
+// Common SQF/C++ macros and constants
+#include "../addons/JS/API.hpp"
+
 // V8 JavaScript Engine
+// TODO: Migrate to the new Persistent handle changes when V8 API is ready
+#define V8_USE_UNSAFE_HANDLES
 #include <v8/v8.h>
+
+// Windows API
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 // Version
 #include "Version.h"
