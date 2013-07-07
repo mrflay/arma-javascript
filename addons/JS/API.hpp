@@ -23,3 +23,6 @@
 #define JS_PROTOCOL_COMMAND_TERMINATE "#T"
 #define JS_PROTOCOL_COMMAND_DONE "#D"
 #define JS_PROTOCOL_COMMAND_VERSION "#V"
+
+// Macro-based JavaScript code execution
+#define JS(CODE) (call compile ("JavaScript" callExtension ##CODE##))
