@@ -112,8 +112,7 @@ std::string Extension::Run(const char* input) {
 		// JS_fnc_terminate
 		else if (input[1] == JS_PROTOCOL_TOKEN_TERMINATE) {
 			
-			std::string scriptHandle(input);
-			scriptHandle.erase(0, JS_PROTOCOL_LENGTH);
+			std::string scriptHandle(input + JS_PROTOCOL_LENGTH);
 
 			// TODO: Need a mutex here
 
@@ -134,8 +133,7 @@ std::string Extension::Run(const char* input) {
 		// JS_fnc_done
 		else if (input[1] == JS_PROTOCOL_TOKEN_DONE) {
 			
-			std::string scriptHandle(input);
-			scriptHandle.erase(0, JS_PROTOCOL_LENGTH);
+			std::string scriptHandle(input + JS_PROTOCOL_LENGTH);
 
 			auto it = backgroundScripts.find(scriptHandle);
 
@@ -165,16 +163,8 @@ std::string Extension::Run(const char* input) {
 	v8::Handle<v8::String> source;
 
 	if (isSpawn) {
-
-		// Strip protocol command
-		// TODO: Can we do this better performance-wise?
-
-		std::string sourceStr(input);
-		sourceStr.erase(0, JS_PROTOCOL_LENGTH);
-
-		source = v8::String::NewFromUtf8(isolate, sourceStr.c_str());
+		source = v8::String::NewFromUtf8(isolate, input + JS_PROTOCOL_LENGTH);
 	}
-	// JS_fnc_exec path
 	else {
 		source = v8::String::NewFromUtf8(isolate, input);
 	}

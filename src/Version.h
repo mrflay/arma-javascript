@@ -23,7 +23,7 @@
 #define DESCRIPTION "JavaScript extension for ARMA"
 #define ENGINE "V8"
 #define VERSION_MAJOR 0
-#define VERSION_MINOR 6
+#define VERSION_MINOR 7
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
