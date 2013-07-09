@@ -21,12 +21,15 @@
 
 #include "Common.h"
 
-// JavaScript bindings
+// JavaScript language support component
 class JavaScript {
 
 public:
 
-	// sleep()
+	// Serialize/convert V8 JavaScript value to SQF value
+	static std::string ToSQF(const v8::Handle<v8::Value> value);
+
+	// Global sleep() function
 	static void Sleep(const v8::FunctionCallbackInfo<v8::Value>& args);
 
 };

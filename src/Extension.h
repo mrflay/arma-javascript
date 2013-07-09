@@ -47,6 +47,9 @@ protected:
 	// Get V8 JavaScript exception message
 	std::string GetException(const v8::TryCatch &tryCatch) const;
 
+	// Generate script handle for a given thread ID
+	static std::string GetScriptHandle(const std::thread::id &threadID);
+
 private:
 
 	// V8 isolate and execution context

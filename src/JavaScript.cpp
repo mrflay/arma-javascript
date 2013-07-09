@@ -21,7 +21,61 @@
 #include "Extension.h"
 #include "SQF.h"
 
-// JavaScript sleep() function
+// Serialize/convert V8 JavaScript value to SQF value
+std::string JavaScript::ToSQF(const v8::Handle<v8::Value> value) {
+
+	// JavaScript null and undefined are matched to SQF nil  
+	if (value->IsNull() || value->IsUndefined()) {
+		return SQF::Nil;
+	}
+
+	// We cannot use toString for array serialization
+	if (value->IsArray()) {
+
+		v8::Handle<v8::Array> valueArray = v8::Handle<v8::Array>::Cast(value);
+		std::string sqf("[");
+
+		// Serialize array
+		uint_fast32 valueArrayLength = valueArray->Length();
+		for (uint_fast32 i = 0; i < valueArrayLength; i++) {
+
+			v8::Handle<v8::Value> arrayItem = valueArray->Get(i);
+
+			sqf += JavaScript::ToSQF(arrayItem);
+
+			if (i < (valueArrayLength - 1)) {
+				sqf += ",";
+			}
+		}
+
+		sqf += "]";
+
+		return sqf;
+	}
+	// Any other value will use V8 Unicode (UTF-8) string conversion
+	else {
+
+		v8::String::Utf8Value valueString(value);
+
+		if (*valueString) {
+			
+			// NOTE: This will use .toString() for objects/arrays
+			std::string sqf(*valueString);
+
+			// Numbers and booleans are serialized directly, any other value
+			// will be serialized as SQF string.
+			if (!value->IsNumber() && !value->IsBoolean()) {
+				sqf = SQF::String(sqf);
+			}
+
+			return sqf;
+		}
+	}
+
+	return SQF::Nil;
+}
+
+// Global sleep() function
 void JavaScript::Sleep(const v8::FunctionCallbackInfo<v8::Value>& args) {
 
 	// NOTE: IsExecutionTerminating() doesn't seem to work when TerminateExecution()
@@ -60,7 +114,7 @@ void JavaScript::Sleep(const v8::FunctionCallbackInfo<v8::Value>& args) {
 			// Cache termination event handle locally
 			if (terminationEvent == NULL) {
 
-				std::string scriptHandle = SQF::ScriptHandle(std::this_thread::get_id());
+				std::string scriptHandle = Extension::GetScriptHandle(std::this_thread::get_id());
 				auto it = extension.backgroundScripts.find(scriptHandle);
 
 				if (it != extension.backgroundScripts.end()) {

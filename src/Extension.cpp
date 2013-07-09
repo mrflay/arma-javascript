@@ -145,7 +145,23 @@ std::string Extension::Run(const char* input) {
 		}
 		// JS_fnc_version
 		else if (input[1] == JS_PROTOCOL_TOKEN_VERSION) {
-			return SQF::Version();
+
+			// Version information is returned as SQF array
+			std::string sqf("[");
+	
+			// Addon version
+			sqf += SQF::String(VERSION_STR);
+			sqf += ",";
+	
+			// JavaScript engine name
+			sqf += SQF::String(ENGINE);
+			sqf += ",";
+
+			// JavaScript engine version
+			sqf += SQF::String(v8::V8::GetVersion());
+			sqf += "]";
+
+			return sqf;
 		}
 		// JS_fnc_init
 		else if (input[1] == JS_PROTOCOL_TOKEN_INIT) {
@@ -190,14 +206,14 @@ std::string Extension::Run(const char* input) {
 					// NOTE: We do not need a mutex here because the V8 Locker is active
 
 					std::thread backgroundThread(Extension::Spawn, backgroundScript);
-					std::string scriptHandle = SQF::ScriptHandle(backgroundThread.get_id());
+					std::string scriptHandle = GetScriptHandle(backgroundThread.get_id());
 
-					// Store background thread ID and termination event
+					// Store background script handle and termination event
 					backgroundScripts[scriptHandle] = CreateEvent(NULL, TRUE, FALSE, NULL);
 
 					backgroundThread.detach();
 
-					return ('"' + scriptHandle + '"');
+					return SQF::String(scriptHandle);
 				}
 				catch (...) {
 					return SQF::Nil; // System error
@@ -218,7 +234,7 @@ std::string Extension::Run(const char* input) {
 		else if (!result.IsEmpty()) {
 
 			// Return JavaScript result as serialized SQF
-			return SQF::Serialize(result);
+			return JavaScript::ToSQF(result);
 		}
 	}
 
@@ -241,7 +257,7 @@ void Extension::Spawn(v8::Persistent<v8::Script> script) {
 	// TODO: Catch unhandled JavaScript exceptions and log them to ARMA RPT file
 	script->Run();
 
-	std::string scriptHandle = SQF::ScriptHandle(std::this_thread::get_id());
+	std::string scriptHandle = GetScriptHandle(std::this_thread::get_id());
 
 	auto it = extension.backgroundScripts.find(scriptHandle);
 
@@ -299,6 +315,18 @@ std::string Extension::GetException(const v8::TryCatch &tryCatch) const {
 	}
 
 	return exceptionMessage;
+}
+
+// Generate script handle for a given thread ID
+std::string Extension::GetScriptHandle(const std::thread::id &threadID) {
+
+	std::stringstream ss;
+
+	// SQF representation of the spawned script handle
+	ss << JS_PROTOCOL_COMMAND << JS_PROTOCOL_TOKEN_SPAWN;
+	ss << threadID;
+
+	return ss.str();
 }
 
 // Destructor
