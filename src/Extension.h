@@ -59,9 +59,11 @@ private:
 	// Main thread ID
 	std::thread::id mainThreadID;
 
-	// Active V8 background scripts (script handle => termination event)
+	// Active background scripts (script handle => termination event)
 	std::unordered_map<std::string, HANDLE> backgroundScripts;
+	std::mutex backgroundScriptsMutex;
 
+	// Friends
 	friend class JavaScript;
 	friend class SQF;
 };

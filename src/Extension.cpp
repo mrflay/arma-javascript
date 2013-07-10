@@ -113,35 +113,44 @@ std::string Extension::Run(const char* input) {
 		else if (input[1] == JS_PROTOCOL_TOKEN_TERMINATE) {
 			
 			std::string scriptHandle(input + JS_PROTOCOL_LENGTH);
+			auto result = SQF::False;
 
-			// TODO: Need a mutex here
+			backgroundScriptsMutex.lock();
 
 			auto it = backgroundScripts.find(scriptHandle);
 
-			// Bad script handle (or the background script is already finished)
-			if (it == backgroundScripts.end()) {
-				return SQF::False;
+			if (it != backgroundScripts.end()) {
+
+				// Signal script termination event
+				SetEvent(it->second);
+
+				// TODO: Should we block and wait until the background script is terminated?
+
+				result = SQF::True;
 			}
 
-			// Signal script termination event
-			SetEvent(it->second);
+			backgroundScriptsMutex.unlock();
 
-			// TODO: Should we block and wait until the background script is terminated?
-
-			return SQF::True;
+			return result;
 		}
 		// JS_fnc_done
 		else if (input[1] == JS_PROTOCOL_TOKEN_DONE) {
 			
 			std::string scriptHandle(input + JS_PROTOCOL_LENGTH);
+			auto result = SQF::False;
+
+			backgroundScriptsMutex.lock();
 
 			auto it = backgroundScripts.find(scriptHandle);
 
+			// Background script is finished (or invalid script handle)
 			if (it == backgroundScripts.end()) {
-				return SQF::True;
+				result = SQF::True;
 			}
 
-			return SQF::False;
+			backgroundScriptsMutex.unlock();
+
+			return result;
 		}
 		// JS_fnc_version
 		else if (input[1] == JS_PROTOCOL_TOKEN_VERSION) {
@@ -203,13 +212,13 @@ std::string Extension::Run(const char* input) {
 
 				try {
 
-					// NOTE: We do not need a mutex here because the V8 Locker is active
-
 					std::thread backgroundThread(Extension::Spawn, backgroundScript);
 					std::string scriptHandle = GetScriptHandle(backgroundThread.get_id());
 
 					// Store background script handle and termination event
+					backgroundScriptsMutex.lock();
 					backgroundScripts[scriptHandle] = CreateEvent(NULL, TRUE, FALSE, NULL);
+					backgroundScriptsMutex.unlock();
 
 					backgroundThread.detach();
 
@@ -254,10 +263,12 @@ void Extension::Spawn(v8::Persistent<v8::Script> script) {
 
 	v8::TryCatch tryCatch;
 
-	// TODO: Catch unhandled JavaScript exceptions and log them to ARMA RPT file
+	// TODO: Catch and log unhandled JavaScript exceptions to ARMA RPT file
 	script->Run();
 
 	std::string scriptHandle = GetScriptHandle(std::this_thread::get_id());
+
+	extension.backgroundScriptsMutex.lock();
 
 	auto it = extension.backgroundScripts.find(scriptHandle);
 
@@ -266,8 +277,11 @@ void Extension::Spawn(v8::Persistent<v8::Script> script) {
 
 		CloseHandle(it->second);
 		extension.backgroundScripts.erase(scriptHandle);
-	}	
+	}
 
+	extension.backgroundScriptsMutex.unlock();
+
+	// Dispose persistent script handle
 	script.Dispose();
 	script.Clear();
 }

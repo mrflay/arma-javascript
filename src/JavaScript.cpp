@@ -115,11 +115,16 @@ void JavaScript::Sleep(const v8::FunctionCallbackInfo<v8::Value>& args) {
 			if (terminationEvent == NULL) {
 
 				std::string scriptHandle = Extension::GetScriptHandle(std::this_thread::get_id());
+				
+				extension.backgroundScriptsMutex.lock();
+
 				auto it = extension.backgroundScripts.find(scriptHandle);
 
 				if (it != extension.backgroundScripts.end()) {
 					terminationEvent = it->second;
 				}
+
+				extension.backgroundScriptsMutex.unlock();
 			}
 
 			if (terminationEvent != NULL) {

@@ -23,6 +23,7 @@
 #include <sstream>
 #include <cmath>
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <unordered_map>
 
