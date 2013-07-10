@@ -49,9 +49,11 @@ void __stdcall RVExtension(char* output, int outputSize, const char* input) {
 	// Handle output buffer overflow
 	if (sqf.length() > (size_t)max(outputSize - 1, 0)) {
 
-		// TODO: Technically, instead of throwing an exception we can eliminate
-		// this limitation: use an internal buffer and do self SQF calls until
-		// all the available data is returned to the calling SQF script.
+		/*
+			TODO: Technically, instead of throwing an exception we can eliminate
+			this limitation: use an internal buffer and do self SQF calls until
+			all the available data is returned to the calling SQF script.
+		*/
 		sqf = SQF::Throw("[OOB]");
 	}
 
@@ -212,7 +214,10 @@ std::string Extension::Run(const char* input) {
 
 				try {
 
+					// TODO: Use background script thread pool
+					// (or rewrite with std::async as MSVC 11 STL is using thread pooling internally)
 					std::thread backgroundThread(Extension::Spawn, backgroundScript);
+
 					std::string scriptHandle = GetScriptHandle(backgroundThread.get_id());
 
 					// Store background script handle and termination event

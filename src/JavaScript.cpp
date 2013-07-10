@@ -21,6 +21,11 @@
 #include "Extension.h"
 #include "SQF.h"
 
+// Special JavaScript number values
+#define JAVASCRIPT_NAN "NaN"
+#define JAVASCRIPT_POSITIVE_INFINITY "Infinity"
+#define JAVASCRIPT_NEGATIVE_INFINITY "-Infinity"
+
 // Serialize/convert V8 JavaScript value to SQF value
 std::string JavaScript::ToSQF(const v8::Handle<v8::Value> value) {
 
@@ -59,12 +64,27 @@ std::string JavaScript::ToSQF(const v8::Handle<v8::Value> value) {
 
 		if (*valueString) {
 			
-			// NOTE: This will use .toString() for objects/arrays
+			// NOTE: This will use .toString() for objects
 			std::string sqf(*valueString);
 
-			// Numbers and booleans are serialized directly, any other value
-			// will be serialized as SQF string.
-			if (!value->IsNumber() && !value->IsBoolean()) {
+			// Handle special Number values
+			if (value->IsNumber()) {
+				
+				// NaN is represented in SQF as nil
+				if (sqf.compare(JAVASCRIPT_NAN) == 0) {
+					sqf = SQF::Nil;
+				}
+				// Positive infinity
+				else if (sqf.compare(JAVASCRIPT_POSITIVE_INFINITY) == 0) {
+					sqf = SQF::InfinityPositive;
+				}
+				// Negative infinity
+				else if (sqf.compare(JAVASCRIPT_NEGATIVE_INFINITY) == 0) {
+					sqf = SQF::InfinityNegative;
+				}
+			}
+			// Any other value than Number or Boolean is serialized as SQF string literal
+			else if (!value->IsBoolean()) {
 				sqf = SQF::String(sqf);
 			}
 

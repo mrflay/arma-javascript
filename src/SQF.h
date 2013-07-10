@@ -41,4 +41,8 @@ public:
 	// SQF "Boolean" data type values
 	static const char* True;
 	static const char* False;
+
+	// SQF "Scalar" data type infinity values
+	static const char* InfinityPositive;
+	static const char* InfinityNegative;
 };

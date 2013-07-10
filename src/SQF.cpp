@@ -29,6 +29,8 @@ const char* SQF::Nil = "nil";
 const char* SQF::Nothing = "";
 const char* SQF::True = "true";
 const char* SQF::False = "false";
+const char* SQF::InfinityPositive = "1e39";
+const char* SQF::InfinityNegative = "-1e39";
 
 // Generate SQF string literal
 std::string SQF::String(const std::string &input) {
