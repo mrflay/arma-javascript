@@ -2,7 +2,7 @@
 	Copyright (C) 2013 Simas Toleikis
 
 	A simple unit testing script for JavaScript addon.
-	Use 'execVM "\JS\Scripts\RunTests.sqf"' to execute.
+	Use 'execVM "\JS\Tests\_Run.sqf"' to execute.
 */
 
 private ["_runTest", "_pass", "_fail", "_hint"];
