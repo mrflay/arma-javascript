@@ -17,9 +17,15 @@ _runTest = {
 
 	private ["_result"];
 
-	_result = call compile preprocessFileLineNumbers ("\JS\Tests\" + _this + ".sqf");
+	// Execute unit test file
+	try {
+		_result = call compile preprocessFileLineNumbers format ["\JS\Tests\%1.sqf", _this];
+	}
+	catch {
+		_result = false;
+	};
 
-	// Save test result
+	// Log test result
 	if (not isNil "_result" && {typeName _result == "BOOL" && {_result}}) then {
 		_pass set [count _pass, _this];
 	}
@@ -39,6 +45,12 @@ TEST("NumberScientific");
 TEST("NumberMinMax");
 TEST("NumberInfinity");
 TEST("NumberNaN");
+TEST("BooleanTrue");
+TEST("BooleanFalse");
+TEST("BooleanStatement");
+TEST("ArrayEmpty");
+TEST("ArraySimple");
+TEST("ArrayNested");
 
 // All tests pass
 if (count _fail == 0) then {
