@@ -37,7 +37,7 @@ _runTest = {
 #define TEST(NAME) (##NAME## call _runTest)
 
 // Run tests
-TEST("NumberInteger");
+TEST("Number");
 TEST("NumberFloat");
 TEST("NumberNegative");
 TEST("NumberZero");
@@ -48,9 +48,21 @@ TEST("NumberNaN");
 TEST("BooleanTrue");
 TEST("BooleanFalse");
 TEST("BooleanStatement");
+TEST("Array");
 TEST("ArrayEmpty");
-TEST("ArraySimple");
 TEST("ArrayNested");
+TEST("ArrayLarge");
+TEST("String");
+TEST("StringUTF8");
+TEST("StringQuoteSingle");
+TEST("StringQuoteDouble");
+TEST("StringQuoteUTF8");
+TEST("StringLarge");
+TEST("ExceptionSyntax");
+TEST("ExceptionUser");
+TEST("Null");
+TEST("Undefined");
+TEST("Version");
 
 // All tests pass
 if (count _fail == 0) then {
