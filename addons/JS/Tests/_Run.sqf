@@ -65,11 +65,17 @@ hintSilent "Running @JS addon tests...";
 	TEST("StringQuoteDouble");
 	TEST("StringQuoteUTF8");
 	TEST("StringLarge");
+	TEST("Object");
 	TEST("ExceptionSyntax");
 	TEST("ExceptionUser");
 	TEST("Null");
 	TEST("Undefined");
 	TEST("Version");
+	TEST("Spawn");
+	TEST("Done");
+	TEST("Terminate");
+	TEST("Sleep");
+	TEST("SleepExec");
 
 	// All tests pass
 	if (count _fail == 0) then {
