@@ -20,6 +20,7 @@
 #include "Extension.h"
 #include "SQF.h"
 #include "JavaScript.h"
+#include "LibCurlJSAPI.h"
 
 // DLL entry point
 BOOL WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved) {
@@ -95,6 +96,8 @@ Extension::Extension(): isolate(NULL) {
 	// TODO: Add JavaScript log() function to log to ARMA RPT file
 	// TODO: Detect when ARMA is paused (suspend background scripts and use v8::V8::IdleNotification())
 
+	LibCurlJSAPI::Register(global);
+	
 	// Create V8 execution context
 	context.Reset(isolate, v8::Context::New(isolate, NULL, global));
 }

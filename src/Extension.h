@@ -29,7 +29,7 @@ extern "C"
 }
 
 // Main Extension component
-class Extension: public Singleton<Extension> {
+class Extension: public Singleton<::Extension> {
 
 public:
 

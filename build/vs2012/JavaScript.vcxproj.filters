@@ -8,11 +8,14 @@
     <ClInclude Include="..\..\src\SQF.h" />
     <ClInclude Include="..\..\src\JavaScript.h" />
     <ClInclude Include="..\..\addons\JS\API.hpp" />
+    <ClInclude Include="..\..\src\SilkJS.h" />
+    <ClInclude Include="..\..\src\LibCurlJSAPI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Extension.cpp" />
     <ClCompile Include="..\..\src\SQF.cpp" />
     <ClCompile Include="..\..\src\JavaScript.cpp" />
+    <ClCompile Include="..\..\src\LibCurlJSAPI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="JavaScript.rc" />
