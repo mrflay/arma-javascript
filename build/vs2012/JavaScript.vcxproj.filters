@@ -10,12 +10,17 @@
     <ClInclude Include="..\..\addons\JS\API.hpp" />
     <ClInclude Include="..\..\src\SilkJS.h" />
     <ClInclude Include="..\..\src\LibCurlJSAPI.h" />
+    <ClInclude Include="..\..\src\Filesystem.h" />
+    <ClInclude Include="..\..\src\LibSQLite3JSAPI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\Extension.cpp" />
     <ClCompile Include="..\..\src\SQF.cpp" />
     <ClCompile Include="..\..\src\JavaScript.cpp" />
     <ClCompile Include="..\..\src\LibCurlJSAPI.cpp" />
+    <ClCompile Include="..\..\src\v8.cpp" />
+    <ClCompile Include="..\..\src\fs.cpp" />
+    <ClCompile Include="..\..\src\sqlite3.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="JavaScript.rc" />
