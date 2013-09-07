@@ -35,8 +35,6 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved) {
 		case DLL_THREAD_DETACH:
 		case DLL_PROCESS_DETACH: {
 
-			// TODO:
-
 			break;
 		}
 	}
@@ -53,11 +51,9 @@ void __stdcall RVExtension(char* output, int outputSize, const char* input) {
 	// Handle output buffer overflow
 	if (sqf.length() > (size_t)max(outputSize - 1, 0)) {
 
-		/*
-			TODO: Technically, instead of throwing an exception we can eliminate
-			this limitation: use an internal buffer and do self SQF calls until
-			all the available data is returned to the calling SQF script.
-		*/
+		// TODO: Technically, instead of throwing an exception we can eliminate
+		// this limitation: use an internal buffer and do self SQF calls until
+		// all the available data is returned to the calling SQF script.
 		sqf = SQF::Throw("[OOB]");
 	}
 
@@ -79,7 +75,7 @@ void __stdcall RVExtension(char* output, int outputSize, const char* input) {
 // Constructor
 Extension::Extension(): isolate(NULL) {
 
-	// Main execution thread ID is used for sleep/uiSleep constrain checks
+	// Main execution thread ID is used for sleep constrain checks
 	mainThreadID = std::this_thread::get_id();
 
 	// Single (default) isolated V8 instance is used.
@@ -95,7 +91,6 @@ Extension::Extension(): isolate(NULL) {
 	// sleep() function
 	global->Set(v8::String::NewSymbol("sleep"), v8::FunctionTemplate::New(JavaScript::Sleep), builtInPropAttr);
 
-	// TODO: Add "global" property as alias for global object
 	// TODO: Add JavaScript log() function to log to ARMA RPT file
 	// TODO: Detect when ARMA is paused (suspend background scripts and use v8::V8::IdleNotification())
 
@@ -363,4 +358,6 @@ Extension::~Extension() {
 	// Release V8 execution context handle
 	context.Dispose();
 	context.Clear();
+
+	isolate = NULL;
 }
