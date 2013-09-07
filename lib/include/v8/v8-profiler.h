@@ -30,36 +30,6 @@
 
 #include "v8.h"
 
-#ifdef _WIN32
-// Setup for Windows DLL export/import. See v8.h in this directory for
-// information on how to build/use V8 as a DLL.
-#if defined(BUILDING_V8_SHARED) && defined(USING_V8_SHARED)
-#error both BUILDING_V8_SHARED and USING_V8_SHARED are set - please check the\
-  build configuration to ensure that at most one of these is set
-#endif
-
-#ifdef BUILDING_V8_SHARED
-#define V8EXPORT __declspec(dllexport)
-#elif USING_V8_SHARED
-#define V8EXPORT __declspec(dllimport)
-#else
-#define V8EXPORT
-#endif
-
-#else  // _WIN32
-
-// Setup for Linux shared library export. See v8.h in this directory for
-// information on how to build/use V8 as shared library.
-#if defined(__GNUC__) && ((__GNUC__ >= 4) || \
-    (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(V8_SHARED)
-#define V8EXPORT __attribute__ ((visibility("default")))
-#else
-#define V8EXPORT
-#endif
-
-#endif  // _WIN32
-
-
 /**
  * Profiler support for the V8 JavaScript engine.
  */
@@ -70,7 +40,7 @@ typedef uint32_t SnapshotObjectId;
 /**
  * CpuProfileNode represents a node in a call graph.
  */
-class V8EXPORT CpuProfileNode {
+class V8_EXPORT CpuProfileNode {
  public:
   /** Returns function name (empty string for anonymous functions.) */
   Handle<String> GetFunctionName() const;
@@ -87,23 +57,20 @@ class V8EXPORT CpuProfileNode {
    */
   int GetLineNumber() const;
 
-  /**
-   * Returns total (self + children) execution time of the function,
-   * in milliseconds, estimated by samples count.
-   */
-  double GetTotalTime() const;
+  /** Returns bailout reason for the function
+    * if the optimization was disabled for it.
+    */
+  const char* GetBailoutReason() const;
+
+  /** DEPRECATED. Please use GetHitCount instead.
+    * Returns the count of samples where function was currently executing.
+    */
+  V8_DEPRECATED(double GetSelfSamplesCount() const);
 
   /**
-   * Returns self execution time of the function, in milliseconds,
-   * estimated by samples count.
-   */
-  double GetSelfTime() const;
-
-  /** Returns the count of samples where function exists. */
-  double GetTotalSamplesCount() const;
-
-  /** Returns the count of samples where function was currently executing. */
-  double GetSelfSamplesCount() const;
+    * Returns the count of samples where the function was currently executing.
+    */
+  unsigned GetHitCount() const;
 
   /** Returns function entry UID. */
   unsigned GetCallUid() const;
@@ -125,7 +92,7 @@ class V8EXPORT CpuProfileNode {
  * CpuProfile contains a CPU profile in a form of top-down call tree
  * (from main() down to functions that do all the work).
  */
-class V8EXPORT CpuProfile {
+class V8_EXPORT CpuProfile {
  public:
   /** Returns CPU profile UID (assigned by the profiler.) */
   unsigned GetUid() const;
@@ -149,6 +116,18 @@ class V8EXPORT CpuProfile {
   const CpuProfileNode* GetSample(int index) const;
 
   /**
+    * Returns time when the profile recording started (in microseconds
+    * since the Epoch).
+    */
+  int64_t GetStartTime() const;
+
+  /**
+    * Returns time when the profile recording was stopped (in microseconds
+    * since the Epoch).
+    */
+  int64_t GetEndTime() const;
+
+  /**
    * Deletes the profile and removes it from CpuProfiler's list.
    * All pointers to nodes previously returned become invalid.
    * Profiles with the same uid but obtained using different
@@ -164,16 +143,14 @@ class V8EXPORT CpuProfile {
  * Interface for controlling CPU profiling. Instance of the
  * profiler can be retrieved using v8::Isolate::GetCpuProfiler.
  */
-class V8EXPORT CpuProfiler {
+class V8_EXPORT CpuProfiler {
  public:
   /**
-   * A note on security tokens usage. As scripts from different
-   * origins can run inside a single V8 instance, it is possible to
-   * have functions from different security contexts intermixed in a
-   * single CPU profile. To avoid exposing function names belonging to
-   * other contexts, filtering by security token is performed while
-   * obtaining profiling results.
+   * Changes default CPU profiler sampling interval to the specified number
+   * of microseconds. Default interval is 1000us. This method must be called
+   * when there are no profiles being recorded.
    */
+  void SetSamplingInterval(int us);
 
   /**
    * Returns the number of profiles collected (doesn't include
@@ -181,17 +158,8 @@ class V8EXPORT CpuProfiler {
    */
   int GetProfileCount();
 
-  /** Deprecated. Use GetCpuProfile with single parameter. */
-  V8_DEPRECATED(const CpuProfile* GetCpuProfile(
-      int index,
-      Handle<Value> security_token));
   /** Returns a profile by index. */
   const CpuProfile* GetCpuProfile(int index);
-
-  /** Returns a profile by uid. */
-  V8_DEPRECATED(const CpuProfile* FindCpuProfile(
-      unsigned uid,
-      Handle<Value> security_token = Handle<Value>()));
 
   /**
    * Starts collecting CPU profile. Title may be an empty string. It
@@ -207,12 +175,6 @@ class V8EXPORT CpuProfiler {
   void StartCpuProfiling(Handle<String> title, bool record_samples = false);
 
   /**
-   * Deprecated. Use StopCpuProfiling with one parameter instead.
-   */
-  V8_DEPRECATED(const CpuProfile* StopCpuProfiling(
-      Handle<String> title,
-      Handle<Value> security_token));
-  /**
    * Stops collecting CPU profile with a given title and returns it.
    * If the title given is empty, finishes the last profile started.
    */
@@ -224,6 +186,11 @@ class V8EXPORT CpuProfiler {
    * contents become invalid after this call.
    */
   void DeleteAllCpuProfiles();
+
+  /**
+   * Tells the profiler whether the embedder is idle.
+   */
+  void SetIdle(bool is_idle);
 
  private:
   CpuProfiler();
@@ -240,7 +207,7 @@ class HeapGraphNode;
  * HeapSnapshotEdge represents a directed connection between heap
  * graph nodes: from retainers to retained nodes.
  */
-class V8EXPORT HeapGraphEdge {
+class V8_EXPORT HeapGraphEdge {
  public:
   enum Type {
     kContextVariable = 0,  // A variable from a function context.
@@ -276,7 +243,7 @@ class V8EXPORT HeapGraphEdge {
 /**
  * HeapGraphNode represents a node in a heap graph.
  */
-class V8EXPORT HeapGraphNode {
+class V8_EXPORT HeapGraphNode {
  public:
   enum Type {
     kHidden = 0,      // Hidden node, may be filtered when shown to user.
@@ -328,7 +295,7 @@ class V8EXPORT HeapGraphNode {
 /**
  * HeapSnapshots record the state of the JS heap at some moment.
  */
-class V8EXPORT HeapSnapshot {
+class V8_EXPORT HeapSnapshot {
  public:
   enum SerializationFormat {
     kJSON = 0  // See format description near 'Serialize' method.
@@ -398,7 +365,7 @@ class RetainedObjectInfo;
  * Interface for controlling heap profiling. Instance of the
  * profiler can be retrieved using v8::Isolate::GetHeapProfiler.
  */
-class V8EXPORT HeapProfiler {
+class V8_EXPORT HeapProfiler {
  public:
   /**
    * Callback function invoked for obtaining RetainedObjectInfo for
@@ -536,7 +503,7 @@ class V8EXPORT HeapProfiler {
  * keeps them alive only during snapshot collection. Afterwards, they
  * are freed by calling the Dispose class function.
  */
-class V8EXPORT RetainedObjectInfo {  // NOLINT
+class V8_EXPORT RetainedObjectInfo {  // NOLINT
  public:
   /** Called by V8 when it no longer needs an instance. */
   virtual void Dispose() = 0;
@@ -600,9 +567,6 @@ struct HeapStatsUpdate {
 
 
 }  // namespace v8
-
-
-#undef V8EXPORT
 
 
 #endif  // V8_V8_PROFILER_H_
