@@ -39,6 +39,10 @@ public:
 	// Run JavaScript code and return the result as SQF output
 	std::string Run(const char* input);
 
+	// V8 isolate and execution context
+	v8::Isolate* isolate;
+	v8::Persistent<v8::Context> context;
+
 protected:
 
 	// Run JavaScript code in parallel/background (non-blocking mode)
@@ -52,9 +56,7 @@ protected:
 
 private:
 
-	// V8 isolate and execution context
-	v8::Isolate* isolate;
-	v8::Persistent<v8::Context> context;
+
 
 	// Main thread ID
 	std::thread::id mainThreadID;

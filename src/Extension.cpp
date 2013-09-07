@@ -21,6 +21,9 @@
 #include "SQF.h"
 #include "JavaScript.h"
 #include "LibCurlJSAPI.h"
+#include "LibSQLite3JSAPI.h"
+#include "FileSystem.h"
+#include "VirtualMachine.h"
 
 // DLL entry point
 BOOL WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved) {
@@ -97,6 +100,9 @@ Extension::Extension(): isolate(NULL) {
 	// TODO: Detect when ARMA is paused (suspend background scripts and use v8::V8::IdleNotification())
 
 	LibCurlJSAPI::Register(global);
+	LibSQLite3JSAPI::Register(global);
+	FileSystem::Register(global);
+	VirtualMachine::Register(global);
 	
 	// Create V8 execution context
 	context.Reset(isolate, v8::Context::New(isolate, NULL, global));

@@ -43,7 +43,7 @@ protected:
 	 * @param {int} code - CURL error code.
 	 * @return {string} msg - string describing the error.
 	 */
-	static void LibCurlJSAPI::Error (const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void Error (const v8::FunctionCallbackInfo<v8::Value>& args);
 
 	/**
 	 * @function curl.init
@@ -59,7 +59,7 @@ protected:
 	 * @param {string} url - the URL for the connection.
 	 * @return {object} handle - opaque handle
 	 */
-	static void LibCurlJSAPI::Initialize (const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void Initialize (const v8::FunctionCallbackInfo<v8::Value>& args);
 
 	/**
 	 * @function curl.setMethod
@@ -72,7 +72,7 @@ protected:
 	 * @param {string} method - may be either "GET" or "POST".
 	 * @return {int} status - 0 for success, otherwise an error code.
 	 */
-	static void LibCurlJSAPI::SetMethod (const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void SetMethod (const v8::FunctionCallbackInfo<v8::Value>& args);
 
 	/**
 	 * @function curl.followRedirects
@@ -87,7 +87,7 @@ protected:
 	 * @param {int} flag - 1 to follow redirects, 0 to not follow redirects.
 	 * @return {int} status - 0 for success, otherwise an error code.
 	 */
-	static void LibCurlJSAPI::FollowRedirects (const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void FollowRedirects (const v8::FunctionCallbackInfo<v8::Value>& args);
 
 
 	/**
@@ -109,7 +109,7 @@ protected:
 	 * @param {string} cookie_string - see comments above for the format.
 	 * @return {int} status - 0 for success, otherwise an error code.
 	 */
-	static void LibCurlJSAPI::SetCookie (const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void SetCookie (const v8::FunctionCallbackInfo<v8::Value>& args);
 
 	/**
 	 * @function curl.setHeader
@@ -128,7 +128,7 @@ protected:
 	 * @param {string} header_string - see comments above for the format.
 	 * @return {int} status - 0 for success, otherwise an error code.
 	 */
-	static void LibCurlJSAPI::SetHeader (const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void SetHeader (const v8::FunctionCallbackInfo<v8::Value>& args);
 
 	/**
 	 * @function curl.addFormField
@@ -156,7 +156,7 @@ protected:
 	 * @param {string} contentType - optional content-type for the field value.
 	 * @return {int} status - 0 for success, otherwise an error code.
 	 */
-	static void LibCurlJSAPI::AddFormField(const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void AddFormField(const v8::FunctionCallbackInfo<v8::Value>& args);
 
 	/**
 	 * @function curl.addFormFile
@@ -182,7 +182,7 @@ protected:
 	 * @param {string} contentType - optional content-type for the field value.
 	 * @return {int} status - 0 for success, otherwise an error code.
 	 */
-	static void LibCurlJSAPI::AddFormFile(const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void AddFormFile(const v8::FunctionCallbackInfo<v8::Value>& args);
 
 	/**
 	 * @function curl.setPostFields
@@ -202,7 +202,7 @@ protected:
 	 * @param {string} cookie_string - see comments above for the format.
 	 * @return {int} status - 0 for success, otherwise an error code.
 	 */
-	static void LibCurlJSAPI::SetPostFields (const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void SetPostFields (const v8::FunctionCallbackInfo<v8::Value>& args);
 
 	/**
 	 * @function curl.setTimeout
@@ -215,7 +215,7 @@ protected:
 	 * @param {object} handle - CURL handle
 	 * @param {int} seconds - timeout in seconds, or 0 for infinite.
 	 */
-	static void LibCurlJSAPI::SetTimeout (const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void SetTimeout (const v8::FunctionCallbackInfo<v8::Value>& args);
 
 	/**
 	 * @function curl.perform
@@ -233,7 +233,7 @@ protected:
 	 * @param {int} verbose - set to > 0 to have cURL library print debugging info to console
 	 * @return {int} status - 0 for success, otherwise an error code.
 	 */
-	static void LibCurlJSAPI::Perform (const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void Perform (const v8::FunctionCallbackInfo<v8::Value>& args);
 
 	/**
 	 * @function curl.getResponseCode
@@ -247,7 +247,7 @@ protected:
 	 * @param {object} handle - CURL handle
 	 * @return {int} status - 200 for OK, etc.
 	 */
-	static void LibCurlJSAPI::GetResponseCode (const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void GetResponseCode (const v8::FunctionCallbackInfo<v8::Value>& args);
 
 	/**
 	 * @function curl.getContentType
@@ -261,7 +261,7 @@ protected:
 	 * @param {object} handle - CURL handle
 	 * @return {string} contentType - MIME string / content-type
 	 */
-	static void LibCurlJSAPI::GetContentType (const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void GetContentType (const v8::FunctionCallbackInfo<v8::Value>& args);
 
 	/**
 	 * @funciton curl.getResponseHeaders
@@ -277,7 +277,7 @@ protected:
 	 * @param {object} handle - CURL handle
 	 * @return {string} responseHeaders - the response headers of the completed CURL request.
 	 */
-	static void LibCurlJSAPI::GetResponseHeaders (const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void GetResponseHeaders (const v8::FunctionCallbackInfo<v8::Value>& args);
 
 	/**
 	 * @function curl.getResponseText
@@ -291,7 +291,7 @@ protected:
 	 * @param {object} handle - CURL handle
 	 * @return {string} responseText - the response text of the completed CURL request.
 	 */
-	static void LibCurlJSAPI::GetResponseText (const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void GetResponseText (const v8::FunctionCallbackInfo<v8::Value>& args);
 
 	/**
 	 * @function curl.destroy(handle);
@@ -302,5 +302,5 @@ protected:
 	 * 
 	 * @param {object} handle - CURL handle
 	 */
-	static void LibCurlJSAPI::Destroy (const v8::FunctionCallbackInfo<v8::Value>& args);
+	static void Destroy (const v8::FunctionCallbackInfo<v8::Value>& args);
 };

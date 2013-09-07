@@ -18,4 +18,15 @@
 // Load the DLL extension (and initialize JS addon)
 "JavaScript" callExtension JS_PROTOCOL_COMMAND_INIT;
 
+[] spawn {
+	private ["_script", "_handle"];
+	_script = loadFile "init.js";
+	if (_script == "") then {
+		_handle = _script call js_fnc_spawn;
+		waitUntil { _handle call js_fnc_done };
+	};
+	missionNamespace setVariable ["js_initDone", true];
+};
+
+
 nil
