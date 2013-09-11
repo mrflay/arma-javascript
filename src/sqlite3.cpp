@@ -2,206 +2,210 @@
 #include "SilkJS.h"
 #include "LibSQLite3JSAPI.h"
 
-// TODO
-#pragma warning(disable: 4996)
-
-static JSVAL sqlite_open (JSARGS args) {
+static void sqlite_open (const v8::FunctionCallbackInfo<v8::Value>& args) {
     String::Utf8Value filename(args[0]->ToString());
     sqlite3 *db;
     if (sqlite3_open(*filename, &db)) {
-        return String::New(sqlite3_errmsg(db));
+        args.GetReturnValue().Set(String::New(sqlite3_errmsg(db)));
+		return;
     }
-    return Opaque::New(db);
+    args.GetReturnValue().Set(Opaque::New(db));
 }
 
-static JSVAL sqlite_open16 (JSARGS args) {
+static void sqlite_open16 (const v8::FunctionCallbackInfo<v8::Value>& args) {
     String::Utf8Value filename(args[0]->ToString());
     sqlite3 *db;
     if (sqlite3_open16(*filename, &db)) {
-        return String::New(sqlite3_errmsg(db));
+        args.GetReturnValue().Set(String::New(sqlite3_errmsg(db)));
+		return;
     }
-    return Opaque::New(db);
+    args.GetReturnValue().Set(Opaque::New(db));
 }
 
-static JSVAL sqlite_open_v2 (JSARGS args) {
+static void sqlite_open_v2 (const v8::FunctionCallbackInfo<v8::Value>& args) {
     String::Utf8Value filename(args[0]->ToString());
     int flags = args[1]->IntegerValue();
     String::Utf8Value zVfs(args[2]->ToString());
     sqlite3 *db;
     if (sqlite3_open_v2(*filename, &db, flags, *zVfs)) {
-        return String::New(sqlite3_errmsg(db));
+        args.GetReturnValue().Set(String::New(sqlite3_errmsg(db)));
+		return;
     }
-    return Opaque::New(db);
+    args.GetReturnValue().Set(Opaque::New(db));
 }
 
-static JSVAL sqlite_extended_result_codes (JSARGS args) {
+static void sqlite_extended_result_codes (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3 *db = (sqlite3 *)JSOPAQUE(args[0]);
     int onoff = args[1]->IntegerValue();
-    return Integer::New(sqlite3_extended_result_codes(db, onoff));
+    args.GetReturnValue().Set(Integer::New(sqlite3_extended_result_codes(db, onoff)));
 }
 
-static JSVAL sqlite_errcode (JSARGS args) {
+static void sqlite_errcode (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3 *db = (sqlite3 *)JSOPAQUE(args[0]);
-    return Integer::New(sqlite3_errcode(db));
+    args.GetReturnValue().Set(Integer::New(sqlite3_errcode(db)));
 }
 
-static JSVAL sqlite_extended_errcode (JSARGS args) {
+static void sqlite_extended_errcode (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3 *db = (sqlite3 *)JSOPAQUE(args[0]);
-    return Integer::New(sqlite3_extended_errcode(db));
+    args.GetReturnValue().Set(Integer::New(sqlite3_extended_errcode(db)));
 }
 
-static JSVAL sqlite_errmsg (JSARGS args) {
+static void sqlite_errmsg (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3 *db = (sqlite3 *)JSOPAQUE(args[0]);
-    return String::New(sqlite3_errmsg(db));
+    args.GetReturnValue().Set(String::New(sqlite3_errmsg(db)));
 }
 
-static JSVAL sqlite_errmsg16 (JSARGS args) {
+static void sqlite_errmsg16 (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3 *db = (sqlite3 *)JSOPAQUE(args[0]);
-    return String::New((char *) sqlite3_errmsg16(db));
+    args.GetReturnValue().Set(String::New((char *) sqlite3_errmsg16(db)));
 }
 
-static JSVAL sqlite_prepare (JSARGS args) {
+static void sqlite_prepare (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3 *db = (sqlite3 *)JSOPAQUE(args[0]);
     String::Utf8Value zSql(args[1]->ToString());
     int nByte = args[2]->IntegerValue();
     sqlite3_stmt *stmt;
     if (!sqlite3_prepare(db, *zSql, nByte, &stmt, NULL)) {
-        return String::New(sqlite3_errmsg(db));
+        args.GetReturnValue().Set(String::New(sqlite3_errmsg(db)));
+		return;
     }
-    return Opaque::New(stmt);
+    args.GetReturnValue().Set(Opaque::New(stmt));
 }
 
-static JSVAL sqlite_prepare_v2 (JSARGS args) {
+static void sqlite_prepare_v2 (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3 *db = (sqlite3 *)JSOPAQUE(args[0]);
     String::Utf8Value zSql(args[1]->ToString());
     int nByte = args[2]->IntegerValue();
     sqlite3_stmt *stmt;
     if (!sqlite3_prepare_v2(db, *zSql, nByte, &stmt, NULL)) {
-        return String::New(sqlite3_errmsg(db));
+        args.GetReturnValue().Set(String::New(sqlite3_errmsg(db)));
+		return;
     }
-    return Opaque::New(stmt);
+    args.GetReturnValue().Set(Opaque::New(stmt));
 }
 
-static JSVAL sqlite_prepare16 (JSARGS args) {
+static void sqlite_prepare16 (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3 *db = (sqlite3 *)JSOPAQUE(args[0]);
     String::Utf8Value zSql(args[1]->ToString());
     int nByte = args[2]->IntegerValue();
     sqlite3_stmt *stmt;
     if (!sqlite3_prepare16(db, *zSql, nByte, &stmt, NULL)) {
-        return String::New(sqlite3_errmsg(db));
+        args.GetReturnValue().Set(String::New(sqlite3_errmsg(db)));
+		return;
     }
-    return Opaque::New(stmt);
+    args.GetReturnValue().Set(Opaque::New(stmt));
 }
 
-static JSVAL sqlite_prepare16_v2 (JSARGS args) {
+static void sqlite_prepare16_v2 (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3 *db = (sqlite3 *)JSOPAQUE(args[0]);
     String::Utf8Value zSql(args[1]->ToString());
     int nByte = args[2]->IntegerValue();
     sqlite3_stmt *stmt;
     if (!sqlite3_prepare16_v2(db, *zSql, nByte, &stmt, NULL)) {
-        return String::New(sqlite3_errmsg(db));
+        args.GetReturnValue().Set(String::New(sqlite3_errmsg(db)));
+		return;
     }
-    return Opaque::New(stmt);
+    args.GetReturnValue().Set(Opaque::New(stmt));
 }
 
-static JSVAL sqlite_close (JSARGS args) {
+static void sqlite_close (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3 *db = (sqlite3 *)JSOPAQUE(args[0]);
-    return Integer::New(sqlite3_close(db));
+    args.GetReturnValue().Set(Integer::New(sqlite3_close(db)));
 }
 
-static JSVAL sqlite_finalize (JSARGS args) {
+static void sqlite_finalize (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
-    return Integer::New(sqlite3_finalize(stmt));
+    args.GetReturnValue().Set(Integer::New(sqlite3_finalize(stmt)));
 }
 
-static JSVAL sqlite_reset (JSARGS args) {
+static void sqlite_reset (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
-    return Integer::New(sqlite3_reset(stmt));
+    args.GetReturnValue().Set(Integer::New(sqlite3_reset(stmt)));
 }
 
-static JSVAL sqlite_step (JSARGS args) {
+static void sqlite_step (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
-    return Integer::New(sqlite3_step(stmt));
+    args.GetReturnValue().Set(Integer::New(sqlite3_step(stmt)));
 }
 
-static JSVAL sqlite_column_count (JSARGS args) {
+static void sqlite_column_count (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
-    return Integer::New(sqlite3_column_count(stmt));
+    args.GetReturnValue().Set(Integer::New(sqlite3_column_count(stmt)));
 }
 
-static JSVAL sqlite_data_count (JSARGS args) {
+static void sqlite_data_count (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
-    return Integer::New(sqlite3_data_count(stmt));
+    args.GetReturnValue().Set(Integer::New(sqlite3_data_count(stmt)));
 }
 
-static JSVAL sqlite_column_type (JSARGS args) {
-    sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
-    int iCol = args[1]->IntegerValue();
-    return Integer::New(sqlite3_column_type(stmt, iCol));
-}
-
-static JSVAL sqlite_column_bytes (JSARGS args) {
+static void sqlite_column_type (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
     int iCol = args[1]->IntegerValue();
-    return Integer::New(sqlite3_column_bytes(stmt, iCol));
+    args.GetReturnValue().Set(Integer::New(sqlite3_column_type(stmt, iCol)));
 }
 
-static JSVAL sqlite_column_bytes16 (JSARGS args) {
+static void sqlite_column_bytes (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
     int iCol = args[1]->IntegerValue();
-    return Integer::New(sqlite3_column_bytes16(stmt, iCol));
+    args.GetReturnValue().Set(Integer::New(sqlite3_column_bytes(stmt, iCol)));
 }
 
-static JSVAL sqlite_column_blob (JSARGS args) {
+static void sqlite_column_bytes16 (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
     int iCol = args[1]->IntegerValue();
-    return String::New((char *) sqlite3_column_blob(stmt, iCol));
+    args.GetReturnValue().Set(Integer::New(sqlite3_column_bytes16(stmt, iCol)));
+}
+
+static void sqlite_column_blob (const v8::FunctionCallbackInfo<v8::Value>& args) {
+    sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
+    int iCol = args[1]->IntegerValue();
+    args.GetReturnValue().Set(String::New((char *) sqlite3_column_blob(stmt, iCol)));
 }
 
 // returns a binary blob as base64 encoded string
 #if 0
-static JSVAL sqlite_column_blob64 (JSARGS args) {
+static void sqlite_column_blob64 (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
     int iCol = args[1]->IntegerValue();
     const void *blob = sqlite3_column_blob(stmt, iCol);
-    return String::New(Base64Encode((unsigned char const*) blob, sqlite3_column_bytes(stmt, iCol)).c_str());
+    args.GetReturnValue().Set(String::New(Base64Encode((unsigned char const*) blob, sqlite3_column_bytes(stmt, iCol)).c_str());
 }
 #endif
 
-static JSVAL sqlite_column_double (JSARGS args) {
+static void sqlite_column_double (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
     int iCol = args[1]->IntegerValue();
-    return Number::New(sqlite3_column_double(stmt, iCol));
+    args.GetReturnValue().Set(Number::New(sqlite3_column_double(stmt, iCol)));
 }
 
-static JSVAL sqlite_column_int (JSARGS args) {
+static void sqlite_column_int (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
     int iCol = args[1]->IntegerValue();
-    return Integer::New(sqlite3_column_int(stmt, iCol));
+    args.GetReturnValue().Set(Integer::New(sqlite3_column_int(stmt, iCol)));
 }
 
-static JSVAL sqlite_column_int64 (JSARGS args) {
+static void sqlite_column_int64 (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
     int iCol = args[1]->IntegerValue();
-    return Integer::New(sqlite3_column_int64(stmt, iCol));
+    args.GetReturnValue().Set(Integer::New(sqlite3_column_int64(stmt, iCol)));
 }
 
-static JSVAL sqlite_column_text (JSARGS args) {
+static void sqlite_column_text (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
     int iCol = args[1]->IntegerValue();
-    return String::New((const char *) sqlite3_column_text(stmt, iCol));
+    args.GetReturnValue().Set(String::New((const char *) sqlite3_column_text(stmt, iCol)));
 }
 
-static JSVAL sqlite_column_text16 (JSARGS args) {
+static void sqlite_column_text16 (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
     int iCol = args[1]->IntegerValue();
-    return String::New((char *) sqlite3_column_text16(stmt, iCol));
+    args.GetReturnValue().Set(String::New((char *) sqlite3_column_text16(stmt, iCol)));
 }
 
-static JSVAL sqlite_column_value (JSARGS args) {
+static void sqlite_column_value (const v8::FunctionCallbackInfo<v8::Value>& args) {
     sqlite3_stmt *stmt = (sqlite3_stmt *)JSOPAQUE(args[0]);
     int iCol = args[1]->IntegerValue();
-    return Opaque::New(sqlite3_column_value(stmt, iCol));
+    args.GetReturnValue().Set(Opaque::New(sqlite3_column_value(stmt, iCol)));
 }
 
 

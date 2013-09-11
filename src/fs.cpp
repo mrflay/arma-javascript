@@ -46,9 +46,6 @@
 #define PATH_MAX 4096
 #endif
 
-// TODO
-#pragma warning(disable: 4996)
-
 /**
  * @function fs.error
  * 
@@ -60,8 +57,8 @@
  * 
  * @return {string} message - error message.
  */
-static JSVAL fs_error (JSARGS args) {
-    return String::New(strerror(errno));
+static void fs_error (const v8::FunctionCallbackInfo<v8::Value>& args) {
+     //args.GetReturnValue().Set(String::New(strerror(errno)));
 }
 
 /**
@@ -77,37 +74,39 @@ static JSVAL fs_error (JSARGS args) {
  * @param {string} dirPath path in filesystem to set directory to.
  * @return {int} success - 0 on success, or -1 if error occurred.
  */
-static JSVAL fs_chdir (JSARGS args) {
+static void fs_chdir (const v8::FunctionCallbackInfo<v8::Value>& args) {
     String::Utf8Value dir(args[0]->ToString());
-    return Integer::New(chdir(*dir));
+    args.GetReturnValue().Set(Integer::New(_chdir(*dir)));
 }
 
 
-static JSVAL fs_homedir (JSARGS args) 
+static void fs_homedir (const v8::FunctionCallbackInfo<v8::Value>& args)
 {
     TCHAR szPath[MAX_PATH];
 	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, szPath))) {	
 		v8::Handle<String>s = v8::String::New((uint16_t*)szPath, wcslen(szPath));
-		return s;
+		args.GetReturnValue().Set(s);
+		return;
 	}
-	return Undefined();
+	args.GetReturnValue().Set(Undefined());
 }
 
 
-static JSVAL fs_profiledir (JSARGS args) 
+static void fs_profiledir (const v8::FunctionCallbackInfo<v8::Value>& args)
 {
     TCHAR szPath[MAX_PATH];
 	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, szPath))) {	
 		v8::Handle<String>s = v8::String::New((uint16_t*)szPath, wcslen(szPath));
-		return s;
+		args.GetReturnValue().Set(s);
+		return;
 	}
-	return Undefined();
+	args.GetReturnValue().Set(Undefined());
 }
 
-static JSVAL fs_missiondir (JSARGS args) 
+static void fs_missiondir (const v8::FunctionCallbackInfo<v8::Value>& args)
 {
 	v8::Handle<String>s = v8::String::New(("\\Users\\joel\\Documents\\Arma 3 - Other Profiles\\mrflay\\missions\\practice_range.Stratis"));
-	return s;
+	args.GetReturnValue().Set(s);
 }
 
 /**
@@ -121,11 +120,12 @@ static JSVAL fs_missiondir (JSARGS args)
  * 
  * @return {string} current working directory path or null if error occurred.
  */
-static JSVAL fs_getcwd (JSARGS args) {
-    char *cwd = getcwd(NULL, 0);
+static void fs_getcwd (const v8::FunctionCallbackInfo<v8::Value>& args) 
+{
+    char *cwd = _getcwd(NULL, 0);
     Handle<String>s = String::New(cwd);
     delete[] cwd;
-    return s;
+    args.GetReturnValue().Set(s);
 }
 
 /**
@@ -139,11 +139,12 @@ static JSVAL fs_getcwd (JSARGS args) {
  * @param {int} mode - file permissions for file.
  * @return {int} fd - OS file handle, or -1 if error occurred.
  */
-static JSVAL fs_open (JSARGS args) {
+static void fs_open(const v8::FunctionCallbackInfo<v8::Value>& args) 
+{
     String::Utf8Value filename(args[0]->ToString());
     int flags = args[1]->IntegerValue();
     int mode = args[2]->IntegerValue();
-    return Integer::New(open(*filename, flags, mode));
+    args.GetReturnValue().Set(Integer::New(_open(*filename, flags, mode)));
 }
 
 /**
@@ -159,12 +160,14 @@ static JSVAL fs_open (JSARGS args) {
  * @return {int} success - 0 on success, or -1 if error occurred.
  * 
  */
-static JSVAL fs_close (JSARGS args) {
+static void fs_close (const v8::FunctionCallbackInfo<v8::Value>& args) 
+{
     int fd = args[0]->IntegerValue();
-    return Integer::New(close(fd));
+    args.GetReturnValue().Set(Integer::New(_close(fd)));
 }
 
-static JSOBJ format_stat (struct stat &buf) {
+static JSOBJ format_stat (struct stat &buf) 
+{
     JSOBJ o = Object::New();
     o->Set(String::New("dev"), Integer::New(buf.st_dev));
     o->Set(String::New("ino"), Integer::New(buf.st_ino));
@@ -215,13 +218,15 @@ static JSOBJ format_stat (struct stat &buf) {
  * ### Notes
  * It is a bit more expensive to call this function if you are only interested in one of the fields.  This is because the entire result status object must be constructed.  SilkJS provides faster convenience methods to obtain the size, type, etc., of a file path.
  */
-static JSVAL fs_stat (JSARGS args) {
+static void fs_stat (const v8::FunctionCallbackInfo<v8::Value>& args) 
+{
     String::Utf8Value path(args[0]->ToString());
     struct stat buf;
     if (stat(*path, &buf) == -1) {
-        return Null();
+        args.GetReturnValue().Set(Null());
+		return;
     }
-    return format_stat(buf);
+    args.GetReturnValue().Set(format_stat(buf));
 }
 
 
@@ -236,13 +241,15 @@ static JSVAL fs_stat (JSARGS args) {
  * @param {int} fd - file descriptor of an open file to get status for.
  * @return {object} o - status structure described for fs.stat(), or null if error occurred.
  */
-static JSVAL fs_fstat (JSARGS args) {
+static void fs_fstat (const v8::FunctionCallbackInfo<v8::Value>& args) 
+{
     int fd = args[0]->IntegerValue();
     struct stat buf;
     if (fstat(fd, &buf) == -1) {
-        return False();
+        args.GetReturnValue().Set(False());
+		return;
     }
-    return format_stat(buf);
+    args.GetReturnValue().Set(format_stat(buf));
 }
 
 /**
@@ -259,14 +266,16 @@ static JSVAL fs_fstat (JSARGS args) {
  * @param {string} path - path of file
  * @return {boolean} doesExist - true if file exists, false if not.
  */
-static JSVAL fs_exists (JSARGS args) {
+static void fs_exists (const v8::FunctionCallbackInfo<v8::Value>& args) 
+{
     String::Utf8Value path(args[0]->ToString());
 
     struct stat buf;
     if (stat(*path, &buf)) {
-        return False();
+        args.GetReturnValue().Set(False());
+		return;
     }
-    return True();
+    args.GetReturnValue().Set(True());
 }
 
 /**
@@ -283,18 +292,22 @@ static JSVAL fs_exists (JSARGS args) {
  * @param {string} path - path of file
  * @return {boolean} is_a_file - true if path exists and is a regular file, false if not.
  */
-static JSVAL fs_isfile (JSARGS args) {
+static void fs_isfile (const v8::FunctionCallbackInfo<v8::Value>& args) 
+{
     String::Utf8Value path(args[0]->ToString());
 
     struct stat buf;
     if (stat(*path, &buf)) {
-        return False();
+        args.GetReturnValue().Set(False());
+		return;
     }
     if (S_ISREG(buf.st_mode)) {
-        return True();
+        args.GetReturnValue().Set(True());
+		return;
     }
     else {
-        return False();
+        args.GetReturnValue().Set(False());
+		return;
     }
 }
 
@@ -312,18 +325,22 @@ static JSVAL fs_isfile (JSARGS args) {
  * @param {string} path - path of file
  * @return {boolean} is_a_directory - true if path exists and is a directory, false if not.
  */
-static JSVAL fs_isdir (JSARGS args) {
+static void fs_isdir (const v8::FunctionCallbackInfo<v8::Value>& args) 
+{
     String::Utf8Value path(args[0]->ToString());
 
     struct stat buf;
     if (stat(*path, &buf)) {
-        return False();
+        args.GetReturnValue().Set(False());
+		return;
     }
     if (S_ISDIR(buf.st_mode)) {
-        return True();
+        args.GetReturnValue().Set(True());
+		return;
     }
     else {
-        return False();
+		args.GetReturnValue().Set(False());
+        return;
     }
 }
 
@@ -341,14 +358,16 @@ static JSVAL fs_isdir (JSARGS args) {
  * @param {string} path - path of file
  * @return {int} size - size of file in bytes, or false if an error occurred.
  */
-static JSVAL fs_filesize (JSARGS args) {
+static void fs_filesize (const v8::FunctionCallbackInfo<v8::Value>& args) 
+{
     String::Utf8Value path(args[0]->ToString());
 
     struct stat buf;
     if (stat(*path, &buf)) {
-        return False();
+        args.GetReturnValue().Set(False());
+		return;
     }
-    return Integer::New(buf.st_size);
+    args.GetReturnValue().Set(Integer::New(buf.st_size));
 }
 
 /**
@@ -365,14 +384,16 @@ static JSVAL fs_filesize (JSARGS args) {
  * @param {string} path - path of file
  * @return {int} timestamp - modification time as timestamp, or false if an error occurred.
  */
-static JSVAL fs_mtime (JSARGS args) {
+static void fs_mtime (const v8::FunctionCallbackInfo<v8::Value>& args) 
+{
     String::Utf8Value path(args[0]->ToString());
 
     struct stat buf;
     if (stat(*path, &buf)) {
-        return False();
+        args.GetReturnValue().Set(False());
+		return;
     }
-    return Integer::New(buf.st_mtime);
+    args.GetReturnValue().Set(Integer::New(buf.st_mtime));
 }
 
 /**
@@ -389,15 +410,17 @@ static JSVAL fs_mtime (JSARGS args) {
  * @param {string} path - path to resolve to absolute path.
  * @return {string} real_path - absolute path, or false if an error occurred.
  */
-static JSVAL fs_realpath (JSARGS args) {
+static void fs_realpath (const v8::FunctionCallbackInfo<v8::Value>& args) 
+{
     String::Utf8Value relpath(args[0]->ToString());
     char *abspath = _fullpath(NULL, *relpath, 0);
     if (!abspath) {
-        return False();
+        args.GetReturnValue().Set(False());
+		return;
     }
     Handle<String>s = String::New(abspath);
     free(abspath);
-    return s;
+    args.GetReturnValue().Set(s);
 }
 
 /**
@@ -448,26 +471,28 @@ static JSVAL fs_readdir (JSARGS args) {
  * ### Notes
  * This function reads 1024 bytes from the file at a time.  This is not optimal for big files, but minimizes the amount of memory used by the process.
  */
-static JSVAL fs_readfile (JSARGS args) {
+static void fs_readfile (const v8::FunctionCallbackInfo<v8::Value>& args) 
+{
     String::Utf8Value path(args[0]->ToString());
-    int fd = open(*path, O_RDONLY);
+    int fd = _open(*path, O_RDONLY);
     if (fd == -1) {
-        return Null();
+        args.GetReturnValue().Set(Null());
+		return;
     }
 	
 	// TODO: file locking on windows
     
-    lseek(fd, 0, 0);
+    _lseek(fd, 0, 0);
     std::string s;
     char buf[1024];
     SSIZE_T count;
-    while ((count = read(fd, buf, 1024))) {
+    while ((count = _read(fd, buf, 1024))) {
         s = s.append(buf, count);
     }
     
-    close(fd);
+    _close(fd);
     Handle<String>ret = String::New(s.c_str(), s.size());
-    return ret;
+    args.GetReturnValue().Set(ret);
 }
 
 void FileSystem::Register (v8::Handle<v8::ObjectTemplate> global) {

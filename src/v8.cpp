@@ -19,9 +19,6 @@
 #include <v8/v8-debug.h>
 #include "VirtualMachine.h"
 
-// TODO
-#pragma warning(disable: 4996)
-
 struct ScriptWrapper {
     Persistent<Script> script;
 };
@@ -35,13 +32,14 @@ struct ScriptWrapper {
  * 
  * Call v8's garbage collector.
  */
-static JSVAL gc (const Arguments& args) {
+static void gc (const v8::FunctionCallbackInfo<v8::Value>& args)
+{
     for (int i=0; i<10000; i++) {
         if (V8::IdleNotification()) {
             break;
         }
     }
-    return Undefined();
+    args.GetReturnValue().Set(Undefined());
 }
 
 /**
@@ -59,21 +57,22 @@ static JSVAL gc (const Arguments& args) {
  * You should free any scripts you compile with v8.freeScript().
  */
 
-static JSVAL compileScript (JSARGS args) {
+static void compileScript (const v8::FunctionCallbackInfo<v8::Value>& args)
+{
     //	Persistent<Context>context = Context::New(NULL, ObjectTemplate::New());
     //	Context::Scope context_scope(context);
     TryCatch tryCatch;
-    v8::Persistent<Script>s = v8::Persistent<Script>::New(v8::Script::New(args[0]->ToString(), args[1]->ToString()));
+    v8::Persistent<Script>s = v8::Persistent<Script>::New(::Extension::Get().isolate, v8::Script::New(args[0]->ToString(), args[1]->ToString()));
     if (s.IsEmpty()) {
         String::Utf8Value error(tryCatch.Exception());
-        return ThrowException(String::New(*error)); // String::Concat(String::New("Error compiling "), args[1]->ToString()));
+        args.GetReturnValue().Set(ThrowException(String::New(*error))); // String::Concat(String::New("Error compiling "), args[1]->ToString()));
         // delete wrapper;
         // return Opaque::New(NULL);
     }
     ScriptWrapper *wrapper = new ScriptWrapper;
     wrapper->script = s; // Persistent<Script>::New(Script::New(args[0]->ToString(), args[1]->ToString()));
     //	context.Dispose();
-    return Opaque::New(wrapper);
+    args.GetReturnValue().Set(Opaque::New(wrapper));
 }
 
 
@@ -90,16 +89,18 @@ static JSVAL compileScript (JSARGS args) {
  */
 // runScript(context, script)
 
-static JSVAL runScript (JSARGS args) {
+static void runScript (const v8::FunctionCallbackInfo<v8::Value>& args)
+{
     ScriptWrapper *wrapper = (ScriptWrapper *) JSOPAQUE(args[0]); // wrap->Value();
     if (!wrapper) {
-        return Null();
+        args.GetReturnValue().Set(Null());
+		return;
     }
     //	Persistent<Context>context = Context::New(NULL, ObjectTemplate::New());
     //	Context::Scope context_scope(context);
     Handle<Value>v = wrapper->script->Run();
     //	context.Dispose();
-    return v;
+    args.GetReturnValue().Set(v);
 }
 
 /**
@@ -113,14 +114,16 @@ static JSVAL runScript (JSARGS args) {
  * 
  * @param {object} script - opaque handle to script to be freed.
  */
-static JSVAL freeScript (JSARGS args) {
+static void freeScript (const v8::FunctionCallbackInfo<v8::Value>& args)
+{
     ScriptWrapper *wrapper = (ScriptWrapper *) JSOPAQUE(args[0]);
     wrapper->script.Dispose();
     delete wrapper;
-    return Undefined();
+    args.GetReturnValue().Set(Undefined());
 }
 
-static void debugger () {
+static void debugger ()
+{
 	//TODO
 	Persistent<Context> context = ::Extension::Get().context;
 	v8::Isolate* isolate = ::Extension::Get().isolate;
@@ -138,15 +141,17 @@ static void debugger () {
  * 
  * This function enables the internal v8 debugger on port 5858.
  */
-static JSVAL enableDebugger (JSARGS args) {
+static void enableDebugger (const v8::FunctionCallbackInfo<v8::Value>& args)
+{
     HandleScope scope;
     Debug::SetDebugMessageDispatchHandler(debugger, true);
     Debug::EnableAgent("silkjs", 5858, true);
     Debug::DebugBreak();
-    return Undefined();
+    args.GetReturnValue().Set(Undefined());
 }
 
-void VirtualMachine::Register (v8::Handle<v8::ObjectTemplate> global) {
+void VirtualMachine::Register (v8::Handle<v8::ObjectTemplate> global) 
+{
     HandleScope scope;
 
     Handle<ObjectTemplate>v8 = ObjectTemplate::New();
